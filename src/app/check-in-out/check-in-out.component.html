@@ -1,0 +1,117 @@
+<div class="page-container">
+  <mat-card class="check-in-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>timer</mat-icon>
+        Check In / Check Out
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Location Error Message -->
+      @if (locationError) {
+        <div class="error-banner">
+          <mat-icon>warning</mat-icon>
+          <span>{{ locationError }}</span>
+          <button (click)="locationError = null" mat-icon-button>
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+
+      <div class="status-section">
+        <h2>Current Status</h2>
+        <div [class.checked-in]="isCheckedIn" [class.checked-out]="!isCheckedIn" class="status-badge">
+          <mat-icon>{{ isCheckedIn ? 'work' : 'home' }}</mat-icon>
+          <span>{{ isCheckedIn ? 'Checked In' : 'Checked Out' }}</span>
+        </div>
+
+        @if (lastCheckInTime && isCheckedIn) {
+          <p class="time-info"><strong>Checked in at:</strong> {{ lastCheckInTime | date:'short' }}</p>
+        }
+
+        @if (lastCheckOutTime && !isCheckedIn) {
+          <p class="time-info"><strong>Last checked out at:</strong> {{ lastCheckOutTime | date:'short' }}</p>
+        }
+      </div>
+
+      <div class="action-section">
+        <button
+          (click)="toggleCheckInOut()"
+          [color]="isCheckedIn ? 'warn' : 'primary'"
+          [disabled]="isLoadingLocation"
+          class="check-button"
+          mat-raised-button>
+          @if (isLoadingLocation) {
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Getting Location...</span>
+          } @else {
+            <ng-container>
+              <mat-icon>{{ isCheckedIn ? 'logout' : 'login' }}</mat-icon>
+              <span>{{ isCheckedIn ? 'Check Out' : 'Check In' }}</span>
+            </ng-container>
+          }
+        </button>
+
+        <!-- Location Map Button -->
+        @if (checkInOutLocations.length > 0) {
+          <button
+            (click)="openFullMap()"
+            class="map-button"
+            mat-stroked-button>
+            <mat-icon>map</mat-icon>
+            View Locations ({{ checkInOutLocations.length }})
+          </button>
+        }
+      </div>
+
+      <!-- Location Map Preview -->
+      @if (showLocationMap && checkInOutLocations.length > 0) {
+        <div class="map-preview-section">
+          <div class="map-header">
+            <h3>
+              <mat-icon>location_on</mat-icon>
+              Today's Locations
+            </h3>
+            <button (click)="toggleLocationMap()" mat-icon-button>
+              <mat-icon>expand_less</mat-icon>
+            </button>
+          </div>
+          <app-location-map
+            [locations]="checkInOutLocations"
+            [showOnlyToday]="true">
+          </app-location-map>
+        </div>
+      }
+
+      <div class="history-section">
+        <h3>Today's History</h3>
+        @if (todayHistory.length > 0) {
+          <div class="history-list">
+            @for (record of todayHistory; track record.id) {
+              <div [class.has-location]="record.location" class="history-item">
+                <mat-icon
+                  [class.check-in-icon]="record.type === 'in'"
+                  [class.check-out-icon]="record.type === 'out'">
+                  {{ record.type === 'in' ? 'login' : 'logout' }}
+                </mat-icon>
+                <div class="history-details">
+                  <span class="record-type">{{ record.type === 'in' ? 'Check In' : 'Check Out' }}</span>
+                  <span class="record-time">{{ record.timestamp | date:'short' }}</span>
+                  @if (record.location) {
+                    <span class="location-badge">
+                      <mat-icon>location_on</mat-icon>
+                      {{ record.location.latitude | number:'1.4-4' }}, {{ record.location.longitude | number:'1.4-4' }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="no-history">No check-in/out records for today.</p>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

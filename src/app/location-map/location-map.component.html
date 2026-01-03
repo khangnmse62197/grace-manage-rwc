@@ -1,0 +1,180 @@
+<div class="location-map-container">
+  <mat-tab-group class="location-tabs">
+    <!-- Map Tab -->
+    <mat-tab label="Map View">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">map</mat-icon>
+        <span>Map View</span>
+      </ng-template>
+
+      <div class="map-tab-content">
+        @if (locations.length > 0) {
+          <div class="map-wrapper">
+            <div class="leaflet-map" id="check-in-map"></div>
+
+            @if (selectedLocation) {
+              <div class="selected-location-info">
+                <h4>
+                  {{ selectedLocation.type === 'in' ? '📍 Check In' : '📍 Check Out' }}
+                </h4>
+                <p><strong>Time:</strong> {{ selectedLocation.timestamp | date:'short' }}</p>
+                <p><strong>Latitude:</strong> {{ selectedLocation.location.latitude | number:'1.5-5' }}</p>
+                <p><strong>Longitude:</strong> {{ selectedLocation.location.longitude | number:'1.5-5' }}</p>
+                <p><strong>Accuracy:</strong> ±{{ selectedLocation.location.accuracy | number:'1.0-0' }}m</p>
+
+                <div class="location-actions">
+                  <button (click)="copyCoordinates(selectedLocation)" mat-stroked-button>
+                    <mat-icon>content_copy</mat-icon>
+                    Copy Coordinates
+                  </button>
+                  <button (click)="openInGoogleMaps(selectedLocation)" mat-stroked-button>
+                    <mat-icon>open_in_new</mat-icon>
+                    Google Maps
+                  </button>
+                  <button (click)="openInOSM(selectedLocation)" mat-stroked-button>
+                    <mat-icon>open_in_new</mat-icon>
+                    OpenStreetMap
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-data">
+            <mat-icon>location_off</mat-icon>
+            <p>No location data available</p>
+            <p class="hint">Check in or check out to record location</p>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- List Tab -->
+    <mat-tab label="Location History">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">list</mat-icon>
+        <span>Location History</span>
+      </ng-template>
+
+      <div class="list-tab-content">
+        @if (locations.length > 0) {
+          @for (group of getGroupedLocations(); track group.date) {
+            <div class="date-group">
+              <h4 class="date-header">{{ group.date }}</h4>
+              <mat-list>
+                @for (location of group.locations; track location.id) {
+                  <mat-list-item [class.check-in]="location.type === 'in'" [class.check-out]="location.type === 'out'"
+                                 class="location-item">
+                    <mat-icon [class.check-in-icon]="location.type === 'in'"
+                              [class.check-out-icon]="location.type === 'out'"
+                              matListItemIcon>
+                      {{ location.type === 'in' ? 'login' : 'logout' }}
+                    </mat-icon>
+
+                    <div class="location-title" matListItemTitle>
+                      {{ location.type === 'in' ? 'Check In' : 'Check Out' }}
+                    </div>
+
+                    <div class="location-details" matListItemLine>
+                      <span class="time">{{ location.timestamp | date:'HH:mm:ss' }}</span>
+                      <span class="coordinates">
+                        {{ location.location.latitude | number:'1.5-5' }}
+                        , {{ location.location.longitude | number:'1.5-5' }}
+                      </span>
+                      <span class="accuracy">±{{ location.location.accuracy | number:'1.0-0' }}m</span>
+                    </div>
+
+                    <div class="location-actions-mini" matListItemMeta>
+                      <button (click)="copyCoordinates(location)" mat-icon-button title="Copy coordinates">
+                        <mat-icon>content_copy</mat-icon>
+                      </button>
+                      <button (click)="openInGoogleMaps(location)" mat-icon-button title="Open in Google Maps">
+                        <mat-icon>public</mat-icon>
+                      </button>
+                    </div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                }
+              </mat-list>
+            </div>
+          }
+        } @else {
+          <div class="no-data">
+            <mat-icon>history</mat-icon>
+            <p>No location history available</p>
+            <p class="hint">Your check-in/out locations will appear here</p>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- Statistics Tab -->
+    <mat-tab label="Statistics">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">analytics</mat-icon>
+        <span>Statistics</span>
+      </ng-template>
+
+      <div class="stats-tab-content">
+        @if (locations.length > 0) {
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="stat-value">{{ locations.length }}</div>
+              <div class="stat-label">Total Records</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-value">
+                {{ getCheckInCount() }}
+              </div>
+              <div class="stat-label">Check Ins</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-value">
+                {{ getCheckOutCount() }}
+              </div>
+              <div class="stat-label">Check Outs</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-value">
+                {{ getAverageAccuracy() }}m
+              </div>
+              <div class="stat-label">Avg Accuracy</div>
+            </div>
+
+            <div class="locations-summary">
+              <h3>Location Summary</h3>
+              <p>
+                <strong>First Check In:</strong>
+                {{ getFirstCheckInTime() | date:'short' }}
+              </p>
+              <p>
+                <strong>Latest Activity:</strong>
+                {{ locations[0].timestamp | date:'short' }}
+              </p>
+              <p>
+                <strong>Total Duration:</strong>
+                {{ calculateTotalDuration() }}
+              </p>
+            </div>
+
+            <div class="accuracy-info">
+              <h3>Location Accuracy</h3>
+              <p>All locations are recorded with GPS accuracy information (±meters).</p>
+              <p>Higher accuracy indicates more precise location data.</p>
+            </div>
+          </div>
+        } @else {
+          <div class="no-data">
+            <mat-icon>bar_chart</mat-icon>
+            <p>No statistics available</p>
+            <p class="hint">Statistics will be shown once you check in/out with location</p>
+          </div>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+

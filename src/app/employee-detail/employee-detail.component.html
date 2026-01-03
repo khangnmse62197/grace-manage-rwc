@@ -1,0 +1,102 @@
+<div class="page-container">
+  @if (employee) {
+    <mat-card>
+      <mat-card-header>
+        <div class="header-with-back">
+          <button (click)="goBack()" class="back-button" mat-icon-button>
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <mat-card-title>
+            <mat-icon>person</mat-icon>
+            Employee Details
+          </mat-card-title>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Employee Information -->
+        <div class="employee-info-section">
+          <h3>Personal Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <mat-icon>badge</mat-icon>
+              <div class="info-content">
+                <span class="label">Full Name</span>
+                <span class="value">{{ employee.fullName }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>cake</mat-icon>
+              <div class="info-content">
+                <span class="label">Age</span>
+                <span class="value">{{ employee.age }} years</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>work</mat-icon>
+              <div class="info-content">
+                <span class="label">Work Position</span>
+                <span class="value">{{ employee.workPosition }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Check In/Out History -->
+        <div class="history-section">
+          <h3>Check-In/Out History</h3>
+          @if (groupedHistory.length > 0) {
+            <div class="history-list">
+              @for (dayHistory of groupedHistory; track dayHistory.date) {
+                <div class="day-group">
+                  <div class="day-header">
+                    <mat-icon>calendar_today</mat-icon>
+                    <span class="day-date">{{ dayHistory.date | date:'EEEE, MMMM d, y' }}</span>
+                  </div>
+                  <div class="day-records">
+                    @for (record of dayHistory.records; track record.id) {
+                      <div [class.check-in-record]="record.type === 'in'"
+                           [class.check-out-record]="record.type === 'out'"
+                           class="history-record">
+                        <div class="record-icon">
+                          <mat-icon>{{ record.type === 'in' ? 'login' : 'logout' }}</mat-icon>
+                        </div>
+                        <div class="record-details">
+                          <span class="record-type">{{ record.type === 'in' ? 'Check In' : 'Check Out' }}</span>
+                        </div>
+                        <div class="record-time">
+                          {{ record.timestamp | date:'shortTime' }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  <div class="day-summary">
+                    <mat-icon>access_time</mat-icon>
+                    <span>Total hours worked: <strong>{{ dayHistory.totalHours }}</strong></span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-history">
+              <mat-icon>history</mat-icon>
+              <p>No check-in/out history available for this employee.</p>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <div class="error-message">
+          <mat-icon>error</mat-icon>
+          <p>Employee not found</p>
+          <button (click)="goBack()" color="primary" mat-raised-button>Go Back</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

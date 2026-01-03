@@ -1,0 +1,929 @@
+.page-container {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+
+  .check-in-card {
+    width: 100%;
+    max-width: 700px;
+
+    mat-card-header {
+      margin-bottom: 24px;
+
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 600;
+
+        mat-icon {
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+          color: #667eea;
+        }
+      }
+    }
+
+    mat-card-content {
+      .error-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #ffebee;
+        color: #c62828;
+        border-radius: 4px;
+        margin-bottom: 16px;
+        font-size: 14px;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+        }
+
+        button {
+          margin-left: auto;
+          color: #c62828;
+        }
+      }
+
+      .status-section {
+        text-align: center;
+        padding: 24px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 24px;
+
+        h2 {
+          margin: 0 0 20px 0;
+          color: #333;
+          font-size: 20px;
+        }
+
+        .status-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 32px;
+          border-radius: 50px;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 20px;
+
+          mat-icon {
+            font-size: 32px;
+            width: 32px;
+            height: 32px;
+          }
+
+          &.checked-in {
+            background: #4caf50;
+            color: white;
+          }
+
+          &.checked-out {
+            background: #ff9800;
+            color: white;
+          }
+        }
+
+        .user-info {
+          margin: 20px 0;
+          text-align: left;
+          display: inline-block;
+
+          p {
+            margin: 8px 0;
+            color: #555;
+            font-size: 15px;
+          }
+        }
+
+        .time-info {
+          margin: 12px 0;
+          color: #666;
+          font-size: 14px;
+        }
+      }
+
+      .action-section {
+        text-align: center;
+        margin-bottom: 32px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        .check-button {
+          height: 56px;
+          padding: 0 48px;
+          font-size: 18px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+
+          ::ng-deep {
+            .mat-mdc-button-touch-target {
+              width: 48px;
+              height: 48px;
+            }
+          }
+        }
+
+        .map-button {
+          height: 56px;
+          padding: 0 24px;
+          font-size: 16px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border: 2px solid #667eea;
+          color: #667eea;
+
+          &:hover {
+            background: #f5f5f5;
+          }
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+
+      .map-preview-section {
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        overflow: hidden;
+
+        .map-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 16px;
+          background: #f5f5f5;
+          border-bottom: 1px solid #e0e0e0;
+
+          h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            color: #333;
+
+            mat-icon {
+              color: #4caf50;
+              font-size: 20px;
+              width: 20px;
+              height: 20px;
+            }
+          }
+
+          button {
+            color: #667eea;
+          }
+        }
+
+        app-location-map {
+          display: block;
+          height: 400px;
+        }
+      }
+
+      .history-section {
+        h3 {
+          margin: 0 0 16px 0;
+          color: #333;
+          font-size: 18px;
+          font-weight: 600;
+        }
+
+        .history-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+
+          .history-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+
+            &.has-location {
+              border-left-color: #4caf50;
+              background: #f1f8f5;
+            }
+
+            mat-icon {
+              font-size: 24px;
+              width: 24px;
+              height: 24px;
+              flex-shrink: 0;
+              margin-top: 2px;
+
+              &.check-in-icon {
+                color: #4caf50;
+              }
+
+              &.check-out-icon {
+                color: #ff9800;
+              }
+            }
+
+            .history-details {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+
+              .record-type {
+                font-weight: 600;
+                color: #333;
+                font-size: 15px;
+              }
+
+              .record-time {
+                color: #666;
+                font-size: 14px;
+              }
+
+              .location-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                background: #e8f5e9;
+                color: #2e7d32;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+                width: fit-content;
+
+                mat-icon {
+                  font-size: 14px;
+                  width: 14px;
+                  height: 14px;
+                }
+              }
+            }
+          }
+        }
+
+        .no-history {
+          text-align: center;
+          color: #999;
+          padding: 32px;
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+// Tablet Responsiveness
+@media (max-width: 768px) and (min-width: 481px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .check-in-card {
+    mat-card-header {
+      mat-card-title {
+        font-size: 20px;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+
+    mat-card-content {
+      .status-section {
+        padding: 20px;
+        margin-bottom: 20px;
+
+        h2 {
+          font-size: 18px;
+          margin-bottom: 16px;
+        }
+
+        .status-badge {
+          padding: 12px 24px;
+          font-size: 16px;
+          margin-bottom: 16px;
+
+          mat-icon {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+          }
+        }
+
+        .user-info {
+          p {
+            font-size: 14px;
+            margin: 6px 0;
+          }
+        }
+
+        .time-info {
+          font-size: 13px;
+        }
+      }
+
+      .action-section {
+        margin-bottom: 24px;
+
+        .check-button {
+          height: 48px;
+          padding: 0 36px;
+          font-size: 16px;
+          min-width: 160px;
+
+          mat-icon {
+            font-size: 22px;
+            width: 22px;
+            height: 22px;
+          }
+        }
+      }
+
+      .history-section {
+        h3 {
+          font-size: 16px;
+          margin-bottom: 12px;
+        }
+
+        .history-list {
+          gap: 10px;
+
+          .history-item {
+            padding: 12px;
+            gap: 12px;
+
+            mat-icon {
+              font-size: 20px;
+              width: 20px;
+              height: 20px;
+            }
+
+            .record-type {
+              font-size: 14px;
+              min-width: 80px;
+            }
+
+            .record-time {
+              font-size: 12px;
+            }
+          }
+        }
+
+        .no-history {
+          padding: 24px;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+// Mobile Devices (< 480px)
+@media (max-width: 480px) {
+  .page-container {
+    padding: 12px;
+  }
+
+  .check-in-card {
+    mat-card-header {
+      margin-bottom: 16px;
+
+      mat-card-title {
+        font-size: 18px;
+        gap: 8px;
+
+        mat-icon {
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
+        }
+      }
+    }
+
+    mat-card-content {
+      .status-section {
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 8px;
+
+        h2 {
+          font-size: 16px;
+          margin-bottom: 12px;
+        }
+
+        .status-badge {
+          padding: 12px 20px;
+          font-size: 14px;
+          margin-bottom: 12px;
+          gap: 10px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        .user-info {
+          p {
+            font-size: 13px;
+            margin: 4px 0;
+          }
+        }
+
+        .time-info {
+          margin: 8px 0;
+          font-size: 12px;
+        }
+      }
+
+      .action-section {
+        margin-bottom: 20px;
+
+        .check-button {
+          height: 44px;
+          padding: 0 24px;
+          font-size: 14px;
+          width: 100%;
+          min-width: auto;
+          justify-content: center;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+
+      .history-section {
+        h3 {
+          font-size: 15px;
+          margin-bottom: 10px;
+        }
+
+        .history-list {
+          gap: 8px;
+
+          .history-item {
+            padding: 10px 12px;
+            gap: 10px;
+            border-left-width: 3px;
+            flex-wrap: wrap;
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+              flex-shrink: 0;
+            }
+
+            .record-type {
+              font-size: 12px;
+              font-weight: 600;
+              min-width: auto;
+            }
+
+            .record-time {
+              font-size: 11px;
+              margin-left: auto;
+              white-space: nowrap;
+            }
+          }
+        }
+
+        .no-history {
+          padding: 20px 12px;
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}
+
+// Mobile Devices
+@media (max-width: 480px) {
+  .page-container {
+    padding: 12px;
+  }
+
+  .check-in-card {
+    mat-card-header {
+      margin-bottom: 16px;
+
+      mat-card-title {
+        font-size: 18px;
+        gap: 8px;
+
+        mat-icon {
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
+        }
+      }
+    }
+
+    mat-card-content {
+      .error-banner {
+        padding: 10px 12px;
+        gap: 8px;
+        font-size: 13px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      .status-section {
+        padding: 16px;
+        margin-bottom: 16px;
+
+        h2 {
+          font-size: 16px;
+          margin-bottom: 12px;
+        }
+
+        .status-badge {
+          padding: 12px 20px;
+          font-size: 14px;
+          margin-bottom: 12px;
+          gap: 10px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        .time-info {
+          margin: 8px 0;
+          font-size: 12px;
+        }
+      }
+
+      .action-section {
+        margin-bottom: 20px;
+        flex-direction: column;
+
+        .check-button {
+          height: 44px;
+          padding: 0 24px;
+          font-size: 14px;
+          width: 100%;
+          justify-content: center;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+
+          ::ng-deep {
+            mat-spinner {
+              width: 18px !important;
+              height: 18px !important;
+            }
+          }
+        }
+
+        .map-button {
+          height: 44px;
+          padding: 0 16px;
+          font-size: 13px;
+          width: 100%;
+          justify-content: center;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+
+      .map-preview-section {
+        margin-bottom: 20px;
+
+        .map-header {
+          padding: 10px 12px;
+
+          h3 {
+            font-size: 14px;
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+            }
+          }
+        }
+
+        app-location-map {
+          height: 300px;
+        }
+      }
+
+      .history-section {
+        h3 {
+          font-size: 15px;
+          margin-bottom: 10px;
+        }
+
+        .history-list {
+          gap: 8px;
+
+          .history-item {
+            padding: 10px 12px;
+            gap: 10px;
+            border-left-width: 3px;
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+              flex-shrink: 0;
+            }
+
+            .history-details {
+              gap: 4px;
+
+              .record-type {
+                font-size: 13px;
+              }
+
+              .record-time {
+                font-size: 12px;
+              }
+
+              .location-badge {
+                font-size: 11px;
+                padding: 3px 8px;
+
+                mat-icon {
+                  font-size: 12px;
+                  width: 12px;
+                  height: 12px;
+                }
+              }
+            }
+          }
+        }
+
+        .no-history {
+          padding: 20px 12px;
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}
+
+/* Extra Small Devices (360px and below) */
+@media (max-width: 360px) {
+  .page-container {
+    padding: 10px;
+
+    .check-in-card {
+      mat-card-header {
+        margin-bottom: 16px;
+
+        mat-card-title {
+          font-size: 20px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+        }
+      }
+
+      mat-card-content {
+        .status-section {
+          padding: 16px 12px;
+
+          h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+          }
+
+          .status-badge {
+            padding: 12px 20px;
+            font-size: 16px;
+            width: 100%;
+            justify-content: center;
+
+            mat-icon {
+              font-size: 28px;
+              width: 28px;
+              height: 28px;
+            }
+          }
+
+          .time-info {
+            font-size: 12px;
+            margin-top: 12px;
+          }
+        }
+
+        .action-section {
+          gap: 10px;
+
+          .check-button,
+          .map-button {
+            font-size: 12px;
+            padding: 10px 12px;
+            height: 40px;
+
+            mat-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+            }
+
+            span {
+              display: none;
+            }
+
+            &:hover span {
+              display: none;
+            }
+          }
+        }
+
+        .map-preview-section {
+          app-location-map {
+            height: 250px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Small Devices (480px and below) */
+@media (max-width: 480px) {
+  .page-container {
+    padding: 12px;
+
+    .check-in-card {
+      max-width: 100%;
+
+      mat-card-header {
+        mat-card-title {
+          font-size: 22px;
+
+          mat-icon {
+            font-size: 26px;
+          }
+        }
+      }
+
+      mat-card-content {
+        .status-section {
+          padding: 20px 12px;
+
+          h2 {
+            font-size: 18px;
+          }
+
+          .status-badge {
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 16px;
+            padding: 12px 16px;
+
+            mat-icon {
+              font-size: 28px;
+            }
+          }
+        }
+
+        .action-section {
+          gap: 8px;
+          flex-direction: column;
+
+          .check-button,
+          .map-button {
+            width: 100%;
+            height: 44px;
+            font-size: 13px;
+          }
+        }
+
+        .map-preview-section {
+          margin-bottom: 16px;
+
+          .map-header {
+            padding: 8px;
+
+            h3 {
+              font-size: 13px;
+            }
+          }
+
+          app-location-map {
+            height: 280px;
+          }
+        }
+
+        .history-section {
+          h3 {
+            font-size: 14px;
+          }
+
+          .history-list {
+            .history-item {
+              padding: 8px 10px;
+              gap: 8px;
+
+              mat-icon {
+                font-size: 16px;
+                width: 16px;
+                height: 16px;
+              }
+
+              .history-details {
+                .record-type {
+                  font-size: 12px;
+                }
+
+                .record-time {
+                  font-size: 11px;
+                }
+
+                .location-badge {
+                  font-size: 10px;
+                  padding: 2px 6px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Medium Devices (768px and below) */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px;
+
+    .check-in-card {
+      max-width: 100%;
+
+      mat-card-content {
+        .action-section {
+          flex-direction: column;
+
+          .check-button,
+          .map-button {
+            width: 100%;
+            height: 44px;
+          }
+        }
+
+        .map-preview-section {
+          app-location-map {
+            height: 350px;
+          }
+        }
+      }
+    }
+  }
+}
+

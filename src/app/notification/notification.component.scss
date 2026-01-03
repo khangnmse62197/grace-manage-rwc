@@ -1,0 +1,119 @@
+.page-container {
+  padding: 20px;
+
+  mat-card {
+    mat-card-header {
+      margin-bottom: 20px;
+
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 600;
+
+        mat-icon {
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+          color: #667eea;
+        }
+      }
+    }
+
+    mat-card-content {
+      p {
+        font-size: 16px;
+        color: #666;
+      }
+    }
+  }
+}
+
+// Tablet Responsiveness
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  mat-card {
+    mat-card-header {
+      mat-card-title {
+        font-size: 20px;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+
+    mat-card-content {
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Mobile Devices
+@media (max-width: 480px) {
+  .page-container {
+    padding: 12px;
+  }
+
+  mat-card {
+    mat-card-header {
+      margin-bottom: 16px;
+
+      mat-card-title {
+        font-size: 18px;
+        gap: 8px;
+
+        mat-icon {
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
+        }
+      }
+    }
+
+    mat-card-content {
+      padding: 16px;
+
+      p {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+    }
+  }
+}
+
+// Extra Small Devices
+@media (max-width: 360px) {
+  .page-container {
+    padding: 8px;
+  }
+
+  mat-card {
+    mat-card-header {
+      mat-card-title {
+        font-size: 16px;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+
+    mat-card-content {
+      p {
+        font-size: 12px;
+      }
+    }
+  }
+}
+

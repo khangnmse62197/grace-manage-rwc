@@ -1,0 +1,141 @@
+<div class="page-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>people</mat-icon>
+        Employee Management
+      </mat-card-title>
+      <div class="header-actions">
+        <button (click)="openAddDialog()" color="primary" mat-raised-button>
+          <mat-icon>add</mat-icon>
+          Add Employee
+        </button>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="table-container">
+        <table [dataSource]="employees" class="employee-table" mat-table>
+          <!-- Full Name Column -->
+          <ng-container matColumnDef="fullName">
+            <th *matHeaderCellDef mat-header-cell>Full Name</th>
+            <td *matCellDef="let employee" mat-cell>{{ employee.fullName }}</td>
+          </ng-container>
+
+          <!-- Age Column -->
+          <ng-container matColumnDef="age">
+            <th *matHeaderCellDef mat-header-cell>Age</th>
+            <td *matCellDef="let employee" mat-cell>{{ employee.age }}</td>
+          </ng-container>
+
+          <!-- Work Position Column -->
+          <ng-container matColumnDef="workPosition">
+            <th *matHeaderCellDef mat-header-cell>Work Position</th>
+            <td *matCellDef="let employee" mat-cell>{{ employee.workPosition }}</td>
+          </ng-container>
+
+          <!-- Last Check In Column -->
+          <ng-container matColumnDef="lastCheckInTime">
+            <th *matHeaderCellDef mat-header-cell>Last Check In</th>
+            <td *matCellDef="let employee" mat-cell>
+              {{ employee.lastCheckInTime ? (employee.lastCheckInTime | date:'short') : 'N/A' }}
+            </td>
+          </ng-container>
+
+          <!-- Last Check Out Column -->
+          <ng-container matColumnDef="lastCheckOutTime">
+            <th *matHeaderCellDef mat-header-cell>Last Check Out</th>
+            <td *matCellDef="let employee" mat-cell>
+              {{ employee.lastCheckOutTime ? (employee.lastCheckOutTime | date:'short') : 'N/A' }}
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th *matHeaderCellDef mat-header-cell>Actions</th>
+            <td *matCellDef="let employee" mat-cell>
+              <button (click)="viewDetails(employee)" color="accent" mat-icon-button matTooltip="Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button (click)="openEditDialog(employee)" color="primary" mat-icon-button matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button (click)="deleteEmployee(employee)" color="warn" mat-icon-button matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr *matHeaderRowDef="displayedColumns" mat-header-row></tr>
+          <tr *matRowDef="let row; columns: displayedColumns;" mat-row></tr>
+        </table>
+
+        @if (employees.length === 0) {
+          <div class="no-data">
+            <mat-icon>people_outline</mat-icon>
+            <p>No employees found. Add your first employee!</p>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Add/Edit Employee Dialog -->
+@if (showDialog) {
+  <div (click)="closeDialog()" class="dialog-backdrop">
+    <div (click)="$event.stopPropagation()" class="dialog-container">
+      <div class="dialog-header">
+        <h2>{{ isEditMode ? 'Edit Employee' : 'Add Employee' }}</h2>
+        <button (click)="closeDialog()" mat-icon-button>
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="dialog-content">
+        <form [formGroup]="employeeForm">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Full Name</mat-label>
+            <input formControlName="fullName" matInput placeholder="Enter full name" required>
+            @if (employeeForm.get('fullName')?.invalid && employeeForm.get('fullName')?.touched) {
+              <mat-error>Full name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Age</mat-label>
+            <input formControlName="age" matInput placeholder="Enter age" required type="number">
+            @if (employeeForm.get('age')?.invalid && employeeForm.get('age')?.touched) {
+              <mat-error>Age must be between 18 and 100</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Work Position</mat-label>
+            <input formControlName="workPosition" matInput placeholder="Enter work position" required>
+            @if (employeeForm.get('workPosition')?.invalid && employeeForm.get('workPosition')?.touched) {
+              <mat-error>Work position is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Last Check In Time</mat-label>
+            <input formControlName="lastCheckInTime" matInput type="datetime-local">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Last Check Out Time</mat-label>
+            <input formControlName="lastCheckOutTime" matInput type="datetime-local">
+          </mat-form-field>
+        </form>
+      </div>
+
+      <div class="dialog-actions">
+        <button (click)="closeDialog()" mat-button>Cancel</button>
+        <button (click)="saveEmployee()" [disabled]="employeeForm.invalid" color="primary" mat-raised-button>
+          {{ isEditMode ? 'Update' : 'Add' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

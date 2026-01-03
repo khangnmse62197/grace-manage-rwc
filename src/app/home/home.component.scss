@@ -1,0 +1,404 @@
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f5f5;
+  position: relative;
+
+  &.menu-collapsed {
+    .side-menu {
+      width: 70px;
+    }
+
+    .main-content {
+      margin-left: 70px;
+    }
+  }
+}
+
+// Menu Toggle Button
+.menu-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1100;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #667eea;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+// Mobile Overlay
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.side-menu {
+  width: 260px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  transition: width 0.3s ease, transform 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+
+  &.collapsed {
+    width: 70px;
+
+    .menu-text {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+
+    .menu-header {
+      justify-content: center;
+
+      .app-icon {
+        margin: 0;
+      }
+    }
+
+    .menu-item {
+      justify-content: center;
+      padding: 16px;
+
+      mat-icon {
+        margin: 0;
+      }
+    }
+
+    .logout-btn {
+      justify-content: center;
+
+      mat-icon {
+        margin: 0;
+      }
+    }
+  }
+
+  .menu-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+
+    .app-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+  }
+
+  .menu-nav {
+    flex: 1;
+    padding: 16px 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    white-space: nowrap;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    span {
+      font-size: 15px;
+      font-weight: 500;
+      transition: opacity 0.3s ease;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    &.active {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: white;
+      border-left-color: white;
+    }
+  }
+
+  .menu-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+    .logout-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 16px;
+      color: white;
+      height: 44px;
+      padding: 0 20px;
+      transition: all 0.3s ease;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+
+      span {
+        transition: opacity 0.3s ease;
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+.main-content {
+  margin-left: 260px;
+  flex: 1;
+  padding: 30px;
+  background: #f5f5f5;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+// Mobile Responsiveness
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+
+    &.menu-collapsed {
+      .side-menu {
+        transform: translateX(-100%);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  }
+
+  .menu-toggle {
+    top: 12px;
+    left: 12px;
+    z-index: 1100;
+  }
+
+  .side-menu {
+    width: 100%;
+    max-width: 280px;
+    transform: translateX(0);
+    height: 100vh;
+
+    &.collapsed {
+      transform: translateX(-100%);
+      width: 100%;
+
+      .menu-text {
+        opacity: 1;
+        width: auto;
+      }
+
+      .menu-header {
+        justify-content: flex-start;
+      }
+
+      .menu-item {
+        justify-content: flex-start;
+        padding: 16px 20px;
+      }
+
+      .logout-btn {
+        justify-content: flex-start;
+      }
+    }
+
+    .menu-nav {
+      padding: 12px 0;
+    }
+
+    .menu-item {
+      padding: 14px 16px;
+      font-size: 14px;
+      min-height: 44px; /* Touch-friendly size */
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+
+      span {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 70px 16px 16px;
+    min-height: calc(100vh - 56px);
+  }
+}
+
+// Tablet Responsiveness
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main-content {
+    padding: 24px;
+  }
+
+  .side-menu {
+    width: 240px;
+  }
+
+  .layout-container.menu-collapsed {
+    .side-menu {
+      width: 70px;
+    }
+
+    .main-content {
+      margin-left: 70px;
+    }
+  }
+}
+
+// Small Mobile Devices
+@media (max-width: 480px) {
+  .main-content {
+    padding: 60px 12px 12px;
+    font-size: 14px;
+  }
+
+  .side-menu {
+    max-width: 100%;
+    width: 100%;
+
+    .menu-header {
+      padding: 16px 16px;
+      min-height: 60px;
+
+      h2 {
+        font-size: 18px;
+      }
+
+      .app-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .menu-item {
+      padding: 12px 16px;
+      gap: 12px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      span {
+        font-size: 13px;
+      }
+    }
+
+    .menu-footer {
+      .logout-btn {
+        height: 40px;
+        padding: 0 16px;
+        font-size: 13px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+
+  .menu-toggle {
+    width: 44px;
+    height: 44px;
+    top: 8px;
+    left: 8px;
+  }
+}
+
+// Extra Small Devices (< 360px)
+@media (max-width: 359px) {
+  .main-content {
+    padding: 56px 8px 8px;
+  }
+
+  .side-menu {
+    max-width: 85vw;
+
+    .menu-header {
+      padding: 12px;
+    }
+
+    .menu-item {
+      padding: 10px 12px;
+      gap: 10px;
+    }
+  }
+}

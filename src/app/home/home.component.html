@@ -1,0 +1,63 @@
+<div [class.menu-collapsed]="isMenuCollapsed" class="layout-container">
+  <!-- Menu Toggle Button -->
+  <button (click)="toggleMenu()" class="menu-toggle" mat-icon-button>
+    <mat-icon>{{ isMenuCollapsed ? 'menu' : 'menu_open' }}</mat-icon>
+  </button>
+
+  <!-- Mobile Overlay -->
+  @if (isMobile && !isMenuCollapsed) {
+    <div (click)="toggleMenu()" class="menu-overlay"></div>
+  }
+
+  <!-- Side Menu -->
+  <aside [class.collapsed]="isMenuCollapsed" class="side-menu">
+    <div class="menu-header">
+      <mat-icon class="app-icon">business</mat-icon>
+      <h2 class="menu-text">Grace Manage</h2>
+    </div>
+
+    <nav class="menu-nav">
+      <!-- Menu for all authenticated users -->
+      <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/check-in-out" routerLinkActive="active">
+        <mat-icon>timer</mat-icon>
+        <span class="menu-text">Check In/Out</span>
+      </a>
+
+      <!-- Admin-only menu items -->
+      @if (isAdmin) {
+        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/employee-management"
+           routerLinkActive="active">
+          <mat-icon>people</mat-icon>
+          <span class="menu-text">Employee Management</span>
+        </a>
+
+        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/in-stock" routerLinkActive="active">
+          <mat-icon>inventory_2</mat-icon>
+          <span class="menu-text">In Stock</span>
+        </a>
+
+        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/statistic" routerLinkActive="active">
+          <mat-icon>bar_chart</mat-icon>
+          <span class="menu-text">Statistic</span>
+        </a>
+
+        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/notification" routerLinkActive="active">
+          <mat-icon>notifications</mat-icon>
+          <span class="menu-text">Notification</span>
+        </a>
+      }
+    </nav>
+
+    <div class="menu-footer">
+      <button (click)="logout()" class="logout-btn" mat-button>
+        <mat-icon>logout</mat-icon>
+        <span class="menu-text">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
