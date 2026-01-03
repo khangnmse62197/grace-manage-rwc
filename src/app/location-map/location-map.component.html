@@ -1,4 +1,10 @@
 <div class="location-map-container">
+  <div class="dialog-header">
+    <h2>Location History</h2>
+    <button (click)="closeDialog()" class="close-button" mat-icon-button>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
   <mat-tab-group class="location-tabs">
     <!-- Map Tab -->
     <mat-tab label="Map View">

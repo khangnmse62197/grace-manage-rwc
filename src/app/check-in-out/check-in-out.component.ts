@@ -27,8 +27,7 @@ interface CheckRecord {
     MatButtonModule,
     MatDialogModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
-    LocationMapComponent
+    MatSnackBarModule
   ],
   templateUrl: './check-in-out.component.html',
   styleUrl: './check-in-out.component.scss'
@@ -205,12 +204,13 @@ export class CheckInOutComponent implements OnInit, OnDestroy {
 
   openFullMap(): void {
     const dialogRef = this.dialog.open(LocationMapComponent, {
-      width: '95vw',
-      height: '95vh',
-      maxWidth: '100vw',
-      maxHeight: '100vh',
-      panelClass: 'full-screen-dialog',
-      data: null
+      width: '80vw',
+      height: '80vh',
+      maxWidth: '95vw',
+      maxHeight: '95vh',
+      panelClass: 'location-map-dialog',
+      data: null,
+      disableClose: false
     });
 
     // Pass locations after dialog opens

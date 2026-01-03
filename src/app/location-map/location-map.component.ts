@@ -6,6 +6,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatListModule} from '@angular/material/list';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatDialogRef} from '@angular/material/dialog';
 import {CheckInOutLocation, LocationService} from '../location.service';
 import L from 'leaflet';
 
@@ -42,7 +43,7 @@ export class LocationMapComponent implements OnInit, OnDestroy, OnChanges, After
   isLoading = false;
   private viewInitialized = false;
 
-  constructor(private locationService: LocationService) {
+  constructor(private locationService: LocationService, public dialogRef: MatDialogRef<LocationMapComponent>) {
   }
 
   ngOnInit(): void {
@@ -354,6 +355,10 @@ export class LocationMapComponent implements OnInit, OnDestroy, OnChanges, After
     });
 
     return grouped;
+  }
+
+  closeDialog(): void {
+    this.dialogRef.close();
   }
 }
 

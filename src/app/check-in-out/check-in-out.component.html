@@ -65,25 +65,6 @@
         }
       </div>
 
-      <!-- Location Map Preview -->
-      @if (showLocationMap && checkInOutLocations.length > 0) {
-        <div class="map-preview-section">
-          <div class="map-header">
-            <h3>
-              <mat-icon>location_on</mat-icon>
-              Today's Locations
-            </h3>
-            <button (click)="toggleLocationMap()" mat-icon-button>
-              <mat-icon>expand_less</mat-icon>
-            </button>
-          </div>
-          <app-location-map
-            [locations]="checkInOutLocations"
-            [showOnlyToday]="true">
-          </app-location-map>
-        </div>
-      }
-
       <div class="history-section">
         <h3>Today's History</h3>
         @if (todayHistory.length > 0) {
