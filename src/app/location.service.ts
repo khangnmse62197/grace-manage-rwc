@@ -61,8 +61,8 @@ export class LocationService {
 
       const options = {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        timeout: 30000,
+        maximumAge: 5000
       };
 
       navigator.geolocation.getCurrentPosition(
@@ -96,8 +96,8 @@ export class LocationService {
 
     const options = {
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
+      timeout: 30000,
+      maximumAge: 5000
     };
 
     return navigator.geolocation.watchPosition(

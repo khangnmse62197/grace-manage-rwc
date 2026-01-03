@@ -43,12 +43,12 @@
           class="check-button"
           mat-raised-button>
           @if (isLoadingLocation) {
-            <mat-spinner diameter="20"></mat-spinner>
-            <span>Getting Location...</span>
+            <span class="btn-icon"><mat-spinner diameter="20"></mat-spinner></span>
+            <span class="btn-label">Getting Location...</span>
           } @else {
             <ng-container>
-              <mat-icon>{{ isCheckedIn ? 'logout' : 'login' }}</mat-icon>
-              <span>{{ isCheckedIn ? 'Check Out' : 'Check In' }}</span>
+              <span class="btn-icon"><mat-icon>{{ isCheckedIn ? 'logout' : 'login' }}</mat-icon></span>
+              <span class="btn-label">{{ isCheckedIn ? 'Check Out' : 'Check In' }}</span>
             </ng-container>
           }
         </button>
@@ -59,8 +59,8 @@
             (click)="openFullMap()"
             class="map-button"
             mat-stroked-button>
-            <mat-icon>map</mat-icon>
-            View Locations ({{ checkInOutLocations.length }})
+            <span class="btn-icon"><mat-icon>map</mat-icon></span>
+            <span class="btn-label">View Locations ({{ checkInOutLocations.length }})</span>
           </button>
         }
       </div>

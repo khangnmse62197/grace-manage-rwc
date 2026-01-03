@@ -132,8 +132,18 @@ export class CheckInOutComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         this.isLoadingLocation = false;
-        this.locationError = 'Failed to get location. Using check-in without location.';
         console.error('Location error:', error);
+
+        // Handle different error codes
+        if (error.code === 3) {
+          this.locationError = 'Location request timed out. Using check-in without location.';
+        } else if (error.code === 1) {
+          this.locationError = 'Location permission denied. Using check-in without location.';
+        } else if (error.code === 2) {
+          this.locationError = 'Location unavailable. Using check-in without location.';
+        } else {
+          this.locationError = 'Failed to get location. Using check-in without location.';
+        }
 
         // Still allow check-in without location
         const userId = this.currentUser?.id;
