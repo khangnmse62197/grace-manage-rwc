@@ -28,10 +28,10 @@
             <td *matCellDef="let employee" mat-cell>{{ employee.age }}</td>
           </ng-container>
 
-          <!-- Work Position Column -->
-          <ng-container matColumnDef="workPosition">
-            <th *matHeaderCellDef mat-header-cell>Work Position</th>
-            <td *matCellDef="let employee" mat-cell>{{ employee.workPosition }}</td>
+          <!-- Role Column -->
+          <ng-container matColumnDef="role">
+            <th *matHeaderCellDef mat-header-cell>Role</th>
+            <td *matCellDef="let employee" mat-cell>{{ getRoleName(employee.roleId) }}</td>
           </ng-container>
 
           <!-- Last Check In Column -->
@@ -111,10 +111,14 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Work Position</mat-label>
-            <input formControlName="workPosition" matInput placeholder="Enter work position" required>
-            @if (employeeForm.get('workPosition')?.invalid && employeeForm.get('workPosition')?.touched) {
-              <mat-error>Work position is required</mat-error>
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="roleId" required>
+              <mat-option *ngFor="let role of roles" [value]="role.id">
+                {{ role.name }}
+              </mat-option>
+            </mat-select>
+            @if (employeeForm.get('roleId')?.invalid && employeeForm.get('roleId')?.touched) {
+              <mat-error>Role is required</mat-error>
             }
           </mat-form-field>
 

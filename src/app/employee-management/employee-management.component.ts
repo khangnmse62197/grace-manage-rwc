@@ -9,7 +9,9 @@ import {MatTableModule} from '@angular/material/table';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatSelectModule} from '@angular/material/select';
 import {Employee, EmployeeService} from '../employee.service';
+import {Role, RoleService} from '../role.service';
 
 @Component({
   selector: 'app-employee-management',
@@ -23,14 +25,17 @@ import {Employee, EmployeeService} from '../employee.service';
     MatTableModule,
     MatFormFieldModule,
     MatInputModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSelectModule
   ],
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss'
 })
 export class EmployeeManagementComponent implements OnInit {
   employees: Employee[] = [];
-  displayedColumns: string[] = ['fullName', 'age', 'workPosition', 'lastCheckInTime', 'lastCheckOutTime', 'actions'];
+  roles: Role[] = [];
+  rolesMap: Map<number, string> = new Map();
+  displayedColumns: string[] = ['fullName', 'age', 'role', 'lastCheckInTime', 'lastCheckOutTime', 'actions'];
 
   showDialog: boolean = false;
   isEditMode: boolean = false;
@@ -39,26 +44,43 @@ export class EmployeeManagementComponent implements OnInit {
 
   constructor(
     private employeeService: EmployeeService,
+    private roleService: RoleService,
     private fb: FormBuilder,
     private router: Router
   ) {
     this.employeeForm = this.fb.group({
       fullName: ['', Validators.required],
       age: ['', [Validators.required, Validators.min(18), Validators.max(100)]],
-      workPosition: ['', Validators.required],
+      roleId: ['', Validators.required],
       lastCheckInTime: [''],
       lastCheckOutTime: ['']
     });
   }
 
   ngOnInit(): void {
+    this.loadRoles();
     this.loadEmployees();
+  }
+
+  loadRoles(): void {
+    this.roleService.getRolesOnce().subscribe(roles => {
+      this.roles = roles;
+      // Create a map for quick lookup of role name by ID
+      this.rolesMap.clear();
+      roles.forEach(role => {
+        this.rolesMap.set(role.id, role.name);
+      });
+    });
   }
 
   loadEmployees(): void {
     this.employeeService.getEmployees().subscribe(employees => {
       this.employees = employees;
     });
+  }
+
+  getRoleName(roleId: number): string {
+    return this.rolesMap.get(roleId) || 'Unknown';
   }
 
   openAddDialog(): void {
@@ -87,7 +109,7 @@ export class EmployeeManagementComponent implements OnInit {
     this.employeeForm.patchValue({
       fullName: employee.fullName,
       age: employee.age,
-      workPosition: employee.workPosition,
+      roleId: employee.roleId,
       lastCheckInTime: formatDateTimeLocal(employee.lastCheckInTime),
       lastCheckOutTime: formatDateTimeLocal(employee.lastCheckOutTime)
     });
@@ -110,7 +132,7 @@ export class EmployeeManagementComponent implements OnInit {
     const employeeData = {
       fullName: formValue.fullName,
       age: formValue.age,
-      workPosition: formValue.workPosition,
+      roleId: parseInt(formValue.roleId, 10),
       lastCheckInTime: formValue.lastCheckInTime ? new Date(formValue.lastCheckInTime) : null,
       lastCheckOutTime: formValue.lastCheckOutTime ? new Date(formValue.lastCheckOutTime) : null
     };

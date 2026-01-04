@@ -12,7 +12,7 @@ export interface Employee {
   id: number;
   fullName: string;
   age: number;
-  workPosition: string;
+  roleId: number;
   lastCheckInTime: Date | null;
   lastCheckOutTime: Date | null;
 }
@@ -120,7 +120,7 @@ export class EmployeeService {
           id: 1,
           fullName: 'John Doe',
           age: 30,
-          workPosition: 'Software Engineer',
+          roleId: 1,
           lastCheckInTime: new Date('2026-01-02T08:30:00'),
           lastCheckOutTime: new Date('2026-01-01T17:45:00')
         },
@@ -128,7 +128,7 @@ export class EmployeeService {
           id: 2,
           fullName: 'Jane Smith',
           age: 28,
-          workPosition: 'Product Manager',
+          roleId: 2,
           lastCheckInTime: new Date('2026-01-02T09:00:00'),
           lastCheckOutTime: new Date('2026-01-01T18:00:00')
         },
@@ -136,7 +136,7 @@ export class EmployeeService {
           id: 3,
           fullName: 'Mike Johnson',
           age: 35,
-          workPosition: 'Team Lead',
+          roleId: 2,
           lastCheckInTime: new Date('2026-01-02T08:00:00'),
           lastCheckOutTime: new Date('2026-01-01T17:30:00')
         }
