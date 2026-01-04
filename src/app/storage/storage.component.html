@@ -1,14 +1,19 @@
-<div class="page-container">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>inventory_2</mat-icon>
-        Storage
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <p>View and manage inventory stock here.</p>
-    </mat-card-content>
-  </mat-card>
+<div class="storage-container">
+  <div class="storage-header">
+    <mat-icon class="header-icon">inventory_2</mat-icon>
+    <h1>Storage Management</h1>
+  </div>
+
+  <div class="storage-content">
+    <div class="categories-section">
+      <app-category-list #categoryList (selectedCategoryChange)="onCategorySelected($event)"></app-category-list>
+    </div>
+    <div class="equipment-section">
+      <app-equipment-list
+        [categoryName]="selectedCategory?.name"
+        [selectedCategoryId]="selectedCategory?.id">
+      </app-equipment-list>
+    </div>
+  </div>
 </div>
 1
