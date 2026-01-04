@@ -3,12 +3,13 @@ import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 
 @Component({
-  selector: 'app-in-stock',
+  selector: 'app-storage',
   standalone: true,
   imports: [MatCardModule, MatIconModule],
-  templateUrl: './in-stock.component.html',
-  styleUrl: './in-stock.component.scss'
+  templateUrl: './storage.component.html',
+  styleUrl: './storage.component.scss'
 })
-export class InStockComponent {
+export class StorageComponent {
 
 }
+
