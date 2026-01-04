@@ -153,7 +153,10 @@ export class RoleService {
       'export_data',
       'import_data',
       'system_settings',
-      'user_management'
+      'user_management',
+      'view_stocks',
+      'update_stocks',
+      'delete_stocks'
     ];
     return of(permissions).pipe(delay(this.mockDelay));
   }
