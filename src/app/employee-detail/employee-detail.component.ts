@@ -5,6 +5,7 @@ import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
 import {CheckInOutRecord, Employee, EmployeeService} from '../employee.service';
+import {Role, RoleService} from "../role.service";
 
 interface DayHistory {
   date: Date;
@@ -28,16 +29,20 @@ export class EmployeeDetailComponent implements OnInit {
   employee: Employee | null = null;
   history: CheckInOutRecord[] = [];
   groupedHistory: DayHistory[] = [];
+  rolesMap: Map<number, string> = new Map();
+  roles: Role[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private employeeService: EmployeeService,
-    private location: Location
+    private location: Location,
+    private roleService: RoleService
   ) {
   }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadRoles();
     if (id) {
       this.employee = this.employeeService.getEmployeeById(id) || null;
       if (this.employee) {
@@ -47,6 +52,16 @@ export class EmployeeDetailComponent implements OnInit {
     }
   }
 
+  loadRoles(): void {
+    this.roleService.getRolesOnce().subscribe(roles => {
+      this.roles = roles;
+      // Create a map for quick lookup of role name by ID
+      this.rolesMap.clear();
+      roles.forEach(role => {
+        this.rolesMap.set(role.id, role.name);
+      });
+    });
+  }
   goBack(): void {
     this.location.back();
   }
@@ -104,4 +119,9 @@ export class EmployeeDetailComponent implements OnInit {
 
     return `${hours}h${minutes.toString().padStart(2, '0')}'`;
   }
+
+  getRoleName(roleId: number): string {
+    return this.rolesMap.get(roleId) || 'Unknown';
+  }
+
 }

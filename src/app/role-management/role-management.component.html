@@ -1,0 +1,210 @@
+<div class="page-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>security</mat-icon>
+        Role Management
+      </mat-card-title>
+      <div class="header-actions">
+        <button (click)="openAddDialog()" color="primary" mat-raised-button>
+          <mat-icon>add</mat-icon>
+          Add Role
+        </button>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loading) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading roles...</p>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table [dataSource]="roles" class="role-table" mat-table>
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th *matHeaderCellDef mat-header-cell>Role Name</th>
+              <td *matCellDef="let role" mat-cell>
+                <strong>{{ role.name }}</strong>
+              </td>
+            </ng-container>
+
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+              <th *matHeaderCellDef mat-header-cell>Description</th>
+              <td *matCellDef="let role" mat-cell>
+                <span class="description-text">{{ role.description }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Permission Count Column -->
+            <ng-container matColumnDef="permissionCount">
+              <th *matHeaderCellDef mat-header-cell>Permissions</th>
+              <td *matCellDef="let role" mat-cell>
+                <mat-chip [highlighted]="getPermissionCount(role) > 10">
+                  {{ getPermissionCount(role) }} permission(s)
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Created Date Column -->
+            <ng-container matColumnDef="createdAt">
+              <th *matHeaderCellDef mat-header-cell>Created</th>
+              <td *matCellDef="let role" mat-cell>
+                {{ formatDate(role.createdAt) }}
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th *matHeaderCellDef mat-header-cell>Actions</th>
+              <td *matCellDef="let role" mat-cell>
+                <button
+                  (click)="openEditDialog(role)"
+                  [disabled]="actionLoading"
+                  color="primary"
+                  mat-icon-button
+                  matTooltip="Edit Role"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  (click)="deleteRole(role)"
+                  [disabled]="actionLoading || role.id <= 3"
+                  color="warn"
+                  mat-icon-button
+                  matTooltip="Delete Role"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr *matHeaderRowDef="displayedColumns" mat-header-row></tr>
+            <tr *matRowDef="let row; columns: displayedColumns;" mat-row></tr>
+          </table>
+
+          @if (roles.length === 0) {
+            <div class="no-data">
+              <mat-icon>lock_outline</mat-icon>
+              <p>No roles found. Create your first role!</p>
+            </div>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Add/Edit Role Dialog -->
+@if (showDialog) {
+  <div (click)="closeDialog()" class="dialog-backdrop">
+    <div (click)="$event.stopPropagation()" class="dialog-container">
+      <div class="dialog-header">
+        <h2>{{ isEditMode ? 'Edit Role' : 'Create New Role' }}</h2>
+        <button (click)="closeDialog()" mat-icon-button>
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="dialog-content">
+        <form [formGroup]="roleForm">
+          <!-- Role Name Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Role Name</mat-label>
+            <input
+              formControlName="name"
+              matInput
+              placeholder="Enter role name (e.g., Manager, Supervisor)"
+              required
+            >
+            @if (roleForm.get('name')?.invalid && roleForm.get('name')?.touched) {
+              <mat-error>
+                @if (roleForm.get('name')?.errors?.['required']) {
+                  Role name is required
+                } @else if (roleForm.get('name')?.errors?.['minlength']) {
+                  Role name must be at least 3 characters
+                } @else if (roleForm.get('name')?.errors?.['maxlength']) {
+                  Role name must not exceed 50 characters
+                }
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Description Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea
+              formControlName="description"
+              matInput
+              placeholder="Enter role description"
+              required
+              rows="3"
+            ></textarea>
+            @if (roleForm.get('description')?.invalid && roleForm.get('description')?.touched) {
+              <mat-error>
+                @if (roleForm.get('description')?.errors?.['required']) {
+                  Description is required
+                } @else if (roleForm.get('description')?.errors?.['minlength']) {
+                  Description must be at least 10 characters
+                } @else if (roleForm.get('description')?.errors?.['maxlength']) {
+                  Description must not exceed 500 characters
+                }
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Permissions Selection -->
+          <div class="permissions-section">
+            <label class="permissions-label">
+              <strong>Assign Permissions</strong>
+              <span class="permission-count">({{ selectedPermissions.size }} selected)</span>
+            </label>
+            <div class="permissions-grid">
+              @for (permission of availablePermissions; track permission) {
+                <div class="permission-item">
+                  <input
+                    (change)="togglePermission(permission)"
+                    [checked]="isPermissionSelected(permission)"
+                    class="permission-checkbox"
+                    type="checkbox"
+                  >
+                  <label class="permission-label">
+                    {{ permission | titlecase | replace: '_': ' ' }}
+                  </label>
+                </div>
+              }
+            </div>
+            @if (selectedPermissions.size === 0) {
+              <div class="permission-error">
+                <mat-icon>info</mat-icon>
+                <span>Please select at least one permission</span>
+              </div>
+            }
+          </div>
+        </form>
+      </div>
+
+      <div class="dialog-footer">
+        <button (click)="closeDialog()" color="primary" mat-stroked-button>
+          Cancel
+        </button>
+        <button
+          (click)="saveRole()"
+          [disabled]="roleForm.invalid || selectedPermissions.size === 0 || actionLoading"
+          color="primary"
+          mat-raised-button
+        >
+          @if (actionLoading) {
+            <mat-spinner diameter="20"></mat-spinner>
+            Saving...
+          } @else {
+            {{ isEditMode ? 'Update Role' : 'Create Role' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

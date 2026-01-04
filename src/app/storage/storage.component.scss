@@ -1,0 +1,108 @@
+.storage-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f5f5f5;
+}
+
+.storage-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .header-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #667eea;
+  }
+
+  h1 {
+    margin: 0;
+    color: #333;
+    font-size: 28px;
+  }
+}
+
+.storage-content {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+
+  .categories-section {
+    width: 30%;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+    background-color: white;
+  }
+
+  .equipment-section {
+    flex: 1;
+    overflow-y: auto;
+    background-color: white;
+  }
+}
+
+// Tablet Responsiveness
+@media (max-width: 1024px) {
+  .storage-content {
+    flex-direction: column;
+
+    .categories-section {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #e0e0e0;
+      max-height: 40%;
+    }
+
+    .equipment-section {
+      flex: 1;
+    }
+  }
+}
+
+// Mobile Devices
+@media (max-width: 768px) {
+  .storage-header {
+    padding: 16px;
+
+    .header-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  .storage-content {
+    .categories-section {
+      max-height: 50%;
+    }
+  }
+}
+
+// Extra Small Devices
+@media (max-width: 480px) {
+  .storage-header {
+    padding: 12px;
+    gap: 8px;
+
+    h1 {
+      font-size: 18px;
+    }
+  }
+
+  .storage-content {
+    .categories-section {
+      max-height: 45%;
+    }
+  }
+}
+

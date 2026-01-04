@@ -24,8 +24,12 @@ export class AuthService {
   constructor() {
     // Check if user is already logged in (from localStorage)
     const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
+    const sessionExpiry = localStorage.getItem('sessionExpiry');
+    const now = Date.now();
+    if (storedUser && sessionExpiry && now < Number(sessionExpiry)) {
       this.currentUser = JSON.parse(storedUser);
+    } else {
+      this.logout(); // Clear expired session
     }
   }
 
@@ -48,6 +52,9 @@ export class AuthService {
           const {password, ...userWithoutPassword} = user;
           this.currentUser = userWithoutPassword;
           localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+          // Set session expiry for 8 hours from now
+          const expiry = Date.now() + 8 * 60 * 60 * 1000;
+          localStorage.setItem('sessionExpiry', expiry.toString());
           observer.next(userWithoutPassword);
           observer.complete();
         } else {
@@ -63,12 +70,19 @@ export class AuthService {
   logout(): void {
     this.currentUser = null;
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionExpiry');
   }
 
   /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
+    const sessionExpiry = localStorage.getItem('sessionExpiry');
+    const now = Date.now();
+    if (!sessionExpiry || now >= Number(sessionExpiry)) {
+      this.logout();
+      return false;
+    }
     return this.currentUser !== null;
   }
 

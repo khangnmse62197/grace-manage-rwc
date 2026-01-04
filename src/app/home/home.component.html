@@ -31,9 +31,15 @@
           <span class="menu-text">Employee Management</span>
         </a>
 
-        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/in-stock" routerLinkActive="active">
+        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/role-management"
+           routerLinkActive="active">
+          <mat-icon>security</mat-icon>
+          <span class="menu-text">Role Management</span>
+        </a>
+
+        <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/storage" routerLinkActive="active">
           <mat-icon>inventory_2</mat-icon>
-          <span class="menu-text">In Stock</span>
+          <span class="menu-text">Storage</span>
         </a>
 
         <a (click)="closeMenuOnMobile()" class="menu-item" routerLink="/home/statistic" routerLinkActive="active">
