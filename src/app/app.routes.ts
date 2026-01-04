@@ -3,6 +3,7 @@ import {LoginComponent} from './login/login.component';
 import {HomeComponent} from './home/home.component';
 import {EmployeeManagementComponent} from './employee-management/employee-management.component';
 import {EmployeeDetailComponent} from './employee-detail/employee-detail.component';
+import {RoleManagementComponent} from './role-management/role-management.component';
 import {InStockComponent} from './in-stock/in-stock.component';
 import {StatisticComponent} from './statistic/statistic.component';
 import {NotificationComponent} from './notification/notification.component';
@@ -23,6 +24,7 @@ export const routes: Routes = [
       {path: 'check-in-out', component: CheckInOutComponent},
       // Admin only routes
       {path: 'employee-management', component: EmployeeManagementComponent, canActivate: [adminGuard]},
+      {path: 'role-management', component: RoleManagementComponent, canActivate: [adminGuard]},
       {path: 'employee-detail/:id', component: EmployeeDetailComponent, canActivate: [adminGuard]},
       {path: 'in-stock', component: InStockComponent, canActivate: [adminGuard]},
       {path: 'statistic', component: StatisticComponent, canActivate: [adminGuard]},
