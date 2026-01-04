@@ -396,6 +396,30 @@
       .full-width {
         width: 100%;
       }
+
+      .password-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+
+        button {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .generated-password {
+          margin: 0;
+          padding: 8px 12px;
+          background: #e8f5e9;
+          border-radius: 4px;
+          color: #2e7d32;
+          font-size: 12px;
+          font-family: monospace;
+          word-break: break-all;
+        }
+      }
     }
   }
 

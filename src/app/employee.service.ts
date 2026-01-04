@@ -15,6 +15,8 @@ export interface Employee {
   roleId: number;
   lastCheckInTime: Date | null;
   lastCheckOutTime: Date | null;
+  username?: string;
+  password?: string;
 }
 
 @Injectable({
@@ -35,6 +37,10 @@ export class EmployeeService {
 
   getEmployeeById(id: number): Employee | undefined {
     return this.employees.find(emp => emp.id === id);
+  }
+
+  getAllEmployees(): Employee[] {
+    return this.employees;
   }
 
   addEmployee(employee: Omit<Employee, 'id'>): Employee {
@@ -122,7 +128,9 @@ export class EmployeeService {
           age: 30,
           roleId: 1,
           lastCheckInTime: new Date('2026-01-02T08:30:00'),
-          lastCheckOutTime: new Date('2026-01-01T17:45:00')
+          lastCheckOutTime: new Date('2026-01-01T17:45:00'),
+          username: 'john.doe',
+          password: 'hashed_JohnDoe123!'
         },
         {
           id: 2,
@@ -130,7 +138,9 @@ export class EmployeeService {
           age: 28,
           roleId: 2,
           lastCheckInTime: new Date('2026-01-02T09:00:00'),
-          lastCheckOutTime: new Date('2026-01-01T18:00:00')
+          lastCheckOutTime: new Date('2026-01-01T18:00:00'),
+          username: 'jane.smith',
+          password: 'hashed_JaneSmith123!'
         },
         {
           id: 3,
@@ -138,7 +148,9 @@ export class EmployeeService {
           age: 35,
           roleId: 2,
           lastCheckInTime: new Date('2026-01-02T08:00:00'),
-          lastCheckOutTime: new Date('2026-01-01T17:30:00')
+          lastCheckOutTime: new Date('2026-01-01T17:30:00'),
+          username: 'mike.johnson',
+          password: 'hashed_MikeJohnson123!'
         }
       ];
       this.saveEmployees();

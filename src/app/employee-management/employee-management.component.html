@@ -28,6 +28,12 @@
             <td *matCellDef="let employee" mat-cell>{{ employee.age }}</td>
           </ng-container>
 
+          <!-- Username Column -->
+          <ng-container matColumnDef="username">
+            <th *matHeaderCellDef mat-header-cell>Username</th>
+            <td *matCellDef="let employee" mat-cell>{{ employee.username || 'N/A' }}</td>
+          </ng-container>
+
           <!-- Role Column -->
           <ng-container matColumnDef="role">
             <th *matHeaderCellDef mat-header-cell>Role</th>
@@ -121,6 +127,52 @@
               <mat-error>Role is required</mat-error>
             }
           </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Username</mat-label>
+            <input
+              (blur)="validateUsername()"
+              formControlName="username"
+              matInput
+              placeholder="Enter username (alphanumeric and underscore)"
+              required>
+            @if (employeeForm.get('username')?.invalid && employeeForm.get('username')?.touched) {
+              <mat-error *ngIf="usernameValidationError">{{ usernameValidationError }}</mat-error>
+              <mat-error *ngIf="!usernameValidationError">Username is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input
+              (blur)="validatePassword()"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              matInput
+              placeholder="Enter a strong password"
+              required>
+            <button (click)="togglePasswordVisibility()" mat-icon-button matSuffix type="button">
+              <mat-icon>{{ showPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            </button>
+            @if (employeeForm.get('password')?.invalid && employeeForm.get('password')?.touched) {
+              @for (error of passwordValidationErrors; track $index) {
+                <mat-error>{{ error }}</mat-error>
+              }
+              @if (passwordValidationErrors.length === 0) {
+                <mat-error>Password is required</mat-error>
+              }
+            }
+          </mat-form-field>
+
+          <div class="password-actions">
+            <button (click)="generatePassword()" color="primary" mat-stroked-button type="button">
+              <mat-icon>autorenew</mat-icon>
+              Generate Password
+            </button>
+            @if (generatedPassword) {
+              <p class="generated-password">Generated: {{ generatedPassword }}</p>
+            }
+          </div>
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Last Check In Time</mat-label>
