@@ -8,6 +8,7 @@ import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {delay, map} from 'rxjs/operators';
 import {Category, CategoryResponse} from '../models/storage.models';
+import {initializeMockData} from '../mock-data/storage.mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,8 @@ export class CategoryService {
   public categories$ = this.categoriesSubject.asObservable();
 
   constructor() {
+    // Initialize mock data if localStorage is empty
+    initializeMockData();
     this.loadCategoriesFromStorage();
   }
 

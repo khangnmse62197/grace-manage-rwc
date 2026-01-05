@@ -7,7 +7,8 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {delay, map} from 'rxjs/operators';
-import {Equipment, EquipmentResponse, EquipmentsResponse, EquipmentStatus} from '../models/storage.models';
+import {Equipment, EquipmentResponse, EquipmentStatus} from '../models/storage.models';
+import {initializeMockData} from '../mock-data/storage.mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,8 @@ export class EquipmentService {
   public equipment$ = this.equipmentSubject.asObservable();
 
   constructor() {
+    // Initialize mock data if localStorage is empty
+    initializeMockData();
     this.loadEquipmentFromStorage();
   }
 
