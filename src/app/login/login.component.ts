@@ -44,8 +44,10 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Clear any cached authentication/session data
-    this.authService.logout();
+    // Don't auto-logout on page load - check if already authenticated
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/home']);
+    }
   }
 
   onSubmit(): void {
@@ -56,13 +58,24 @@ export class LoginComponent implements OnInit {
       const {username, password} = this.loginForm.value;
 
       this.authService.login(username, password).subscribe({
-        next: (user) => {
+        next: (response) => {
           this.loading = false;
+          console.log('Login successful:', response);
           this.router.navigate(['/home']);
         },
         error: (error) => {
           this.loading = false;
-          this.errorMessage = error.message || 'Login failed. Please try again.';
+          // Handle backend error response
+          if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else if (error.status === 401) {
+            this.errorMessage = 'Invalid username or password';
+          } else if (error.status === 0) {
+            this.errorMessage = 'Unable to connect to server. Please check if the backend is running.';
+          } else {
+            this.errorMessage = 'Login failed. Please try again.';
+          }
+          console.error('Login error:', error);
         }
       });
     }
