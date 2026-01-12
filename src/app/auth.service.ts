@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {BehaviorSubject, catchError, map, Observable, tap, throwError} from 'rxjs';
 import {ApiResponse, LoginResponse, RefreshResponse, User} from './shared/models/api-response.model';
+import {environment} from '../environments/environment';
 
 // Re-export User for backward compatibility
 export type {User} from './shared/models/api-response.model';
@@ -16,7 +17,7 @@ const CURRENT_USER_KEY = 'currentUser';
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:8080/api/v1/auth';
+  private baseUrl = `${environment.apiUrl}/api/v1/auth`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
