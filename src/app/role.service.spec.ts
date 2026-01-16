@@ -1,295 +1,381 @@
 import {TestBed} from '@angular/core/testing';
-import {Role, RoleService} from './role.service';
+import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
+import {CreateRoleRequest, Role, RoleService, UpdateRoleRequest} from './role.service';
+import {environment} from '../environments/environment';
 
 describe('RoleService', () => {
   let service: RoleService;
+  let httpMock: HttpTestingController;
+  const baseUrl = `${environment.apiUrl}/api/v1`;
+
+  // Sample mock data
+  const mockRoles: Role[] = [
+    {
+      id: 1,
+      name: 'Admin',
+      description: 'Full system access with all permissions',
+      permissions: ['view_employees', 'create_employee', 'edit_employee', 'delete_employee'],
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-01T00:00:00Z')
+    },
+    {
+      id: 2,
+      name: 'Manager',
+      description: 'Can manage employees and view statistics',
+      permissions: ['view_employees', 'create_employee', 'view_statistics'],
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-01T00:00:00Z')
+    }
+  ];
+
+  const mockPermissions = [
+    'view_employees',
+    'create_employee',
+    'edit_employee',
+    'delete_employee',
+    'view_roles',
+    'create_role',
+    'edit_role',
+    'delete_role',
+    'view_statistics',
+    'view_check_in_out',
+    'manage_check_in_out',
+    'manage_inventory',
+    'view_notifications',
+    'manage_notifications',
+    'export_data',
+    'import_data',
+    'system_settings',
+    'user_management'
+  ];
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [RoleService]
+    });
     service = TestBed.inject(RoleService);
-    // Clear localStorage before each test
-    localStorage.clear();
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
-    localStorage.clear();
+    httpMock.verify();
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('Role Management', () => {
-    it('should load default roles on initialization', (done) => {
+  describe('getRolesOnce', () => {
+    it('should fetch roles from backend', (done) => {
+      const apiResponse = {
+        status: 'success',
+        message: 'Roles retrieved successfully',
+        data: mockRoles.map(r => ({...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString()}))
+      };
+
       service.getRolesOnce().subscribe(roles => {
-        expect(roles.length).toBeGreaterThan(0);
-        expect(roles.some(r => r.name === 'Admin')).toBeTruthy();
-        expect(roles.some(r => r.name === 'Manager')).toBeTruthy();
-        expect(roles.some(r => r.name === 'Employee')).toBeTruthy();
+        expect(roles.length).toBe(2);
+        expect(roles[0].name).toBe('Admin');
+        expect(roles[1].name).toBe('Manager');
+        expect(roles[0].createdAt instanceof Date).toBeTruthy();
         done();
       });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      expect(req.request.method).toBe('GET');
+      req.flush(apiResponse);
     });
 
+    it('should handle error when fetching roles', (done) => {
+      service.getRolesOnce().subscribe({
+        error: (error) => {
+          expect(error.status).toBe(500);
+          done();
+        }
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      req.flush('Server error', {status: 500, statusText: 'Internal Server Error'});
+    });
+  });
+
+  describe('getRoleById', () => {
+    it('should fetch a single role by ID', (done) => {
+      const apiResponse = {
+        status: 'success',
+        message: 'Role retrieved successfully',
+        data: {
+          ...mockRoles[0],
+          createdAt: mockRoles[0].createdAt.toISOString(),
+          updatedAt: mockRoles[0].updatedAt.toISOString()
+        }
+      };
+
+      service.getRoleById(1).subscribe(role => {
+        expect(role).toBeDefined();
+        expect(role?.name).toBe('Admin');
+        expect(role?.id).toBe(1);
+        done();
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles/1`);
+      expect(req.request.method).toBe('GET');
+      req.flush(apiResponse);
+    });
+
+    it('should return null for non-existent role', (done) => {
+      service.getRoleById(99999).subscribe(role => {
+        expect(role).toBeNull();
+        done();
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles/99999`);
+      req.flush('Role not found', {status: 404, statusText: 'Not Found'});
+    });
+  });
+
+  describe('createRole', () => {
     it('should create a new role', (done) => {
-      const newRole = {
+      const newRoleRequest: CreateRoleRequest = {
         name: 'Supervisor',
-        description: 'Supervises team members',
+        description: 'Supervises team members and operations',
         permissions: ['view_employees', 'manage_check_in_out']
       };
 
-      service.createRole(newRole).subscribe(response => {
+      const createdRole = {
+        id: 3,
+        ...newRoleRequest,
+        createdAt: '2026-01-16T00:00:00Z',
+        updatedAt: '2026-01-16T00:00:00Z'
+      };
+
+      const apiResponse = {
+        status: 'success',
+        message: "Role 'Supervisor' created successfully",
+        data: createdRole
+      };
+
+      service.createRole(newRoleRequest).subscribe(response => {
         expect(response.success).toBeTruthy();
+        expect(response.message).toContain('Supervisor');
         expect(response.data).toBeDefined();
         if (response.data && 'id' in response.data) {
-          expect((response.data as Role).id).toBeGreaterThan(0);
+          expect((response.data as Role).id).toBe(3);
           expect((response.data as Role).name).toBe('Supervisor');
         }
         done();
       });
-    });
 
-    it('should retrieve created role by ID', (done) => {
-      const newRole = {
-        name: 'Test Role',
-        description: 'Test description for testing',
-        permissions: ['view_employees']
-      };
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(newRoleRequest);
+      req.flush(apiResponse);
 
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const roleId = (createResponse.data as Role).id;
-          service.getRoleById(roleId).subscribe(role => {
-            expect(role).toBeDefined();
-            expect(role?.name).toBe('Test Role');
-            done();
-          });
-        }
+      // Handle the refreshRoles call after create
+      const refreshReq = httpMock.expectOne(`${baseUrl}/roles`);
+      refreshReq.flush({
+        status: 'success',
+        data: [...mockRoles.map(r => ({
+          ...r,
+          createdAt: r.createdAt.toISOString(),
+          updatedAt: r.updatedAt.toISOString()
+        })), createdRole],
+        message: ''
       });
     });
 
-    it('should update an existing role', (done) => {
-      const newRole = {
-        name: 'Original Name',
-        description: 'Original description text',
+    it('should handle error when creating role', (done) => {
+      const newRoleRequest: CreateRoleRequest = {
+        name: 'Duplicate',
+        description: 'This role name already exists',
         permissions: ['view_employees']
       };
 
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const roleId = (createResponse.data as Role).id;
-          const updates = {
-            name: 'Updated Name',
-            description: 'Updated description text'
-          };
-
-          service.updateRole(roleId, updates).subscribe(updateResponse => {
-            expect(updateResponse.success).toBeTruthy();
-            expect((updateResponse.data as Role).name).toBe('Updated Name');
-            done();
-          });
-        }
+      service.createRole(newRoleRequest).subscribe(response => {
+        expect(response.success).toBeFalsy();
+        expect(response.message).toBeDefined();
+        done();
       });
-    });
 
-    it('should delete a role', (done) => {
-      const newRole = {
-        name: 'Role to Delete',
-        description: 'This role will be deleted',
-        permissions: ['view_employees']
-      };
-
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const roleId = (createResponse.data as Role).id;
-          service.deleteRole(roleId).subscribe(deleteResponse => {
-            expect(deleteResponse.success).toBeTruthy();
-            // Verify role is actually deleted
-            service.getRoleById(roleId).subscribe(role => {
-              expect(role).toBeNull();
-              done();
-            });
-          });
-        }
-      });
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      req.flush({message: 'Role name already exists'}, {status: 400, statusText: 'Bad Request'});
     });
   });
 
-  describe('Permissions', () => {
-    it('should return available permissions', (done) => {
+  describe('updateRole', () => {
+    it('should update an existing role', (done) => {
+      const updates: UpdateRoleRequest = {
+        name: 'Updated Admin',
+        description: 'Updated admin description'
+      };
+
+      const updatedRole = {
+        ...mockRoles[0],
+        ...updates,
+        createdAt: mockRoles[0].createdAt.toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const apiResponse = {
+        status: 'success',
+        message: "Role 'Updated Admin' updated successfully",
+        data: updatedRole
+      };
+
+      service.updateRole(1, updates).subscribe(response => {
+        expect(response.success).toBeTruthy();
+        expect((response.data as Role).name).toBe('Updated Admin');
+        done();
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles/1`);
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual(updates);
+      req.flush(apiResponse);
+
+      // Handle the refreshRoles call after update
+      const refreshReq = httpMock.expectOne(`${baseUrl}/roles`);
+      refreshReq.flush({
+        status: 'success',
+        data: mockRoles.map(r => ({...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString()})),
+        message: ''
+      });
+    });
+
+    it('should handle error when updating non-existent role', (done) => {
+      const updates: UpdateRoleRequest = {
+        name: 'Nonexistent'
+      };
+
+      service.updateRole(99999, updates).subscribe(response => {
+        expect(response.success).toBeFalsy();
+        expect(response.message).toBeDefined();
+        done();
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles/99999`);
+      req.flush({message: 'Role not found'}, {status: 404, statusText: 'Not Found'});
+    });
+  });
+
+  describe('deleteRole', () => {
+    it('should delete a role', (done) => {
+      const apiResponse = {
+        status: 'success',
+        message: "Role 'Manager' deleted successfully"
+      };
+
+      service.deleteRole(2).subscribe(response => {
+        expect(response.success).toBeTruthy();
+        expect(response.message).toContain('deleted');
+        done();
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles/2`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush(apiResponse);
+
+      // Handle the refreshRoles call after delete
+      const refreshReq = httpMock.expectOne(`${baseUrl}/roles`);
+      refreshReq.flush({
+        status: 'success',
+        data: [mockRoles[0]].map(r => ({
+          ...r,
+          createdAt: r.createdAt.toISOString(),
+          updatedAt: r.updatedAt.toISOString()
+        })),
+        message: ''
+      });
+    });
+
+    it('should handle error when deleting non-existent role', (done) => {
+      service.deleteRole(99999).subscribe(response => {
+        expect(response.success).toBeFalsy();
+        expect(response.message).toBeDefined();
+        done();
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles/99999`);
+      req.flush({message: 'Role not found'}, {status: 404, statusText: 'Not Found'});
+    });
+  });
+
+  describe('getAvailablePermissions', () => {
+    it('should fetch available permissions from backend', (done) => {
+      const apiResponse = {
+        status: 'success',
+        message: 'Permissions retrieved successfully',
+        data: mockPermissions
+      };
+
       service.getAvailablePermissions().subscribe(permissions => {
-        expect(permissions.length).toBeGreaterThan(0);
+        expect(permissions.length).toBe(18);
         expect(permissions).toContain('view_employees');
         expect(permissions).toContain('create_role');
         expect(permissions).toContain('manage_check_in_out');
+        expect(permissions).toContain('user_management');
         done();
       });
+
+      const req = httpMock.expectOne(`${baseUrl}/permissions`);
+      expect(req.request.method).toBe('GET');
+      req.flush(apiResponse);
     });
 
-    it('should allow assigning permissions to roles', (done) => {
-      const newRole = {
-        name: 'Test Permission Role',
-        description: 'Test permission assignment functionality',
-        permissions: ['view_employees', 'create_employee', 'edit_employee']
-      };
-
-      service.createRole(newRole).subscribe(response => {
-        if (response.data && 'id' in response.data) {
-          const role = response.data as Role;
-          expect(role.permissions.length).toBe(3);
-          expect(role.permissions).toContain('view_employees');
+    it('should handle error when fetching permissions', (done) => {
+      service.getAvailablePermissions().subscribe({
+        error: (error) => {
+          expect(error.status).toBe(500);
           done();
         }
       });
-    });
 
-    it('should require at least one permission', (done) => {
-      const newRole = {
-        name: 'No Permission Role',
-        description: 'This role has no permissions',
-        permissions: []
-      };
-
-      // This should be validated on the component level
-      service.createRole(newRole).subscribe(response => {
-        // Service will still create it, validation should happen in component
-        expect(response.success).toBeTruthy();
-        done();
-      });
-    });
-  });
-
-  describe('Local Storage Persistence', () => {
-    it('should persist roles to localStorage', (done) => {
-      const newRole = {
-        name: 'Persistent Role',
-        description: 'This role should persist',
-        permissions: ['view_employees']
-      };
-
-      service.createRole(newRole).subscribe(() => {
-        const stored = localStorage.getItem('roles');
-        expect(stored).toBeTruthy();
-        const parsedRoles = JSON.parse(stored!);
-        expect(parsedRoles.some((r: Role) => r.name === 'Persistent Role')).toBeTruthy();
-        done();
-      });
-    });
-
-    it('should load roles from localStorage on next initialization', (done) => {
-      const newRole = {
-        name: 'Stored Role',
-        description: 'Role stored in localStorage',
-        permissions: ['view_employees']
-      };
-
-      // Create and store role
-      service.createRole(newRole).subscribe(() => {
-        // Create new service instance to test loading from storage
-        const newService = new RoleService();
-        newService.getRolesOnce().subscribe(roles => {
-          expect(roles.some(r => r.name === 'Stored Role')).toBeTruthy();
-          done();
-        });
-      });
+      const req = httpMock.expectOne(`${baseUrl}/permissions`);
+      req.flush('Server error', {status: 500, statusText: 'Internal Server Error'});
     });
   });
 
   describe('Observable Behavior', () => {
-    it('should emit roles as observable', (done) => {
-      let emissionCount = 0;
-      service.roles$.subscribe(roles => {
-        emissionCount++;
-        expect(Array.isArray(roles)).toBeTruthy();
-      });
-
-      const newRole = {
-        name: 'Observable Test',
-        description: 'Testing observable emissions',
-        permissions: ['view_employees']
+    it('should emit roles to subscribers', (done) => {
+      const apiResponse = {
+        status: 'success',
+        message: 'Roles retrieved successfully',
+        data: mockRoles.map(r => ({...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString()}))
       };
 
-      service.createRole(newRole).subscribe(() => {
-        service.roles$.subscribe(() => {
-          expect(emissionCount).toBeGreaterThan(0);
-          done();
-        });
-      });
-    });
+      service.getRolesOnce().subscribe();
 
-    it('should emit updated data after create', (done) => {
-      const newRole = {
-        name: 'Create Observable Test',
-        description: 'Testing create observable emission',
-        permissions: ['view_employees']
-      };
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      req.flush(apiResponse);
 
       service.roles$.subscribe(roles => {
-        if (roles.some(r => r.name === 'Create Observable Test')) {
-          expect(true).toBeTruthy();
-          done();
-        }
-      });
-
-      service.createRole(newRole).subscribe();
-    });
-
-    it('should emit updated data after update', (done) => {
-      const newRole = {
-        name: 'Update Observable Test',
-        description: 'Testing update observable emission',
-        permissions: ['view_employees']
-      };
-
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const roleId = (createResponse.data as Role).id;
-
-          service.roles$.subscribe(roles => {
-            const updatedRole = roles.find(r => r.id === roleId);
-            if (updatedRole && updatedRole.name === 'Updated Observable Test') {
-              expect(true).toBeTruthy();
-              done();
-            }
-          });
-
-          service.updateRole(roleId, {name: 'Updated Observable Test'}).subscribe();
-        }
-      });
-    });
-
-    it('should emit updated data after delete', (done) => {
-      const newRole = {
-        name: 'Delete Observable Test',
-        description: 'Testing delete observable emission',
-        permissions: ['view_employees']
-      };
-
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const roleId = (createResponse.data as Role).id;
-
-          service.roles$.subscribe(roles => {
-            if (!roles.some(r => r.id === roleId)) {
-              expect(true).toBeTruthy();
-              done();
-            }
-          });
-
-          service.deleteRole(roleId).subscribe();
-        }
+        expect(roles.length).toBe(2);
+        done();
       });
     });
   });
 
   describe('Response Format', () => {
     it('should return proper response format on create', (done) => {
-      const newRole = {
+      const newRoleRequest: CreateRoleRequest = {
         name: 'Response Format Test',
         description: 'Testing response format validation',
         permissions: ['view_employees']
       };
 
-      service.createRole(newRole).subscribe(response => {
+      const apiResponse = {
+        status: 'success',
+        message: 'Role created successfully',
+        data: {
+          id: 4,
+          ...newRoleRequest,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      service.createRole(newRoleRequest).subscribe(response => {
         expect(response.success).toBeDefined();
         expect(response.message).toBeDefined();
         expect(response.data).toBeDefined();
@@ -297,16 +383,38 @@ describe('RoleService', () => {
         expect(typeof response.message).toBe('string');
         done();
       });
+
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      req.flush(apiResponse);
+
+      // Handle the refreshRoles call
+      const refreshReq = httpMock.expectOne(`${baseUrl}/roles`);
+      refreshReq.flush({
+        status: 'success',
+        data: mockRoles.map(r => ({...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString()})),
+        message: ''
+      });
     });
 
     it('should include timestamps in response', (done) => {
-      const newRole = {
+      const newRoleRequest: CreateRoleRequest = {
         name: 'Timestamp Test',
         description: 'Testing timestamp inclusion',
         permissions: ['view_employees']
       };
 
-      service.createRole(newRole).subscribe(response => {
+      const apiResponse = {
+        status: 'success',
+        message: 'Role created successfully',
+        data: {
+          id: 5,
+          ...newRoleRequest,
+          createdAt: '2026-01-16T10:00:00Z',
+          updatedAt: '2026-01-16T10:00:00Z'
+        }
+      };
+
+      service.createRole(newRoleRequest).subscribe(response => {
         if (response.data && 'createdAt' in response.data) {
           expect((response.data as Role).createdAt).toBeDefined();
           expect((response.data as Role).updatedAt).toBeDefined();
@@ -314,108 +422,17 @@ describe('RoleService', () => {
         }
         done();
       });
-    });
-  });
 
-  describe('Edge Cases', () => {
-    it('should handle getting non-existent role', (done) => {
-      service.getRoleById(99999).subscribe(role => {
-        expect(role).toBeNull();
-        done();
-      });
-    });
+      const req = httpMock.expectOne(`${baseUrl}/roles`);
+      req.flush(apiResponse);
 
-    it('should handle updating non-existent role', (done) => {
-      service.updateRole(99999, {name: 'Nonexistent'}).subscribe(response => {
-        expect(response.success).toBeFalsy();
-        expect(response.message).toContain('not found');
-        done();
-      });
-    });
-
-    it('should handle deleting non-existent role', (done) => {
-      service.deleteRole(99999).subscribe(response => {
-        expect(response.success).toBeFalsy();
-        expect(response.message).toContain('not found');
-        done();
-      });
-    });
-
-    it('should generate unique IDs', (done) => {
-      const role1 = {
-        name: 'ID Test 1',
-        description: 'First role for ID testing',
-        permissions: ['view_employees']
-      };
-      const role2 = {
-        name: 'ID Test 2',
-        description: 'Second role for ID testing',
-        permissions: ['view_employees']
-      };
-
-      let id1: number;
-      service.createRole(role1).subscribe(response => {
-        if (response.data && 'id' in response.data) {
-          id1 = (response.data as Role).id;
-          service.createRole(role2).subscribe(response2 => {
-            if (response2.data && 'id' in response2.data) {
-              const id2 = (response2.data as Role).id;
-              expect(id1).not.toBe(id2);
-              expect(id2).toBeGreaterThan(id1);
-              done();
-            }
-          });
-        }
-      });
-    });
-  });
-
-  describe('Data Validation', () => {
-    it('should preserve all role data correctly', (done) => {
-      const newRole = {
-        name: 'Data Integrity Test',
-        description: 'This test validates data preservation',
-        permissions: ['view_employees', 'create_employee', 'edit_employee']
-      };
-
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const createdRole = createResponse.data as Role;
-          service.getRoleById(createdRole.id).subscribe(fetchedRole => {
-            expect(fetchedRole?.name).toBe(newRole.name);
-            expect(fetchedRole?.description).toBe(newRole.description);
-            expect(fetchedRole?.permissions).toEqual(newRole.permissions);
-            expect(fetchedRole?.permissions.length).toBe(3);
-            done();
-          });
-        }
-      });
-    });
-
-    it('should update only specified fields', (done) => {
-      const newRole = {
-        name: 'Partial Update Test',
-        description: 'Original description',
-        permissions: ['view_employees']
-      };
-
-      service.createRole(newRole).subscribe(createResponse => {
-        if (createResponse.data && 'id' in createResponse.data) {
-          const roleId = (createResponse.data as Role).id;
-          const partialUpdate = {
-            name: 'Updated Name Only'
-          };
-
-          service.updateRole(roleId, partialUpdate).subscribe(updateResponse => {
-            if (updateResponse.data && 'description' in updateResponse.data) {
-              expect((updateResponse.data as Role).name).toBe('Updated Name Only');
-              expect((updateResponse.data as Role).description).toBe('Original description');
-              done();
-            }
-          });
-        }
+      // Handle the refreshRoles call
+      const refreshReq = httpMock.expectOne(`${baseUrl}/roles`);
+      refreshReq.flush({
+        status: 'success',
+        data: mockRoles.map(r => ({...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString()})),
+        message: ''
       });
     });
   });
 });
-

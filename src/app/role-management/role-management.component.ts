@@ -171,7 +171,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         });
     } else {
       // Create new role
-      this.roleService.createRole(roleData as any)
+      this.roleService.createRole(roleData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {

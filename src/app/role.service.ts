@@ -1,6 +1,9 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, delay, Observable, of} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject, Observable, throwError} from 'rxjs';
+import {catchError, map, tap} from 'rxjs/operators';
+import {ApiResponse} from './shared/models/api-response.model';
+import {environment} from '../environments/environment';
 
 export interface Role {
   id: number;
@@ -17,240 +20,184 @@ export interface RoleResponse {
   message: string;
 }
 
+/**
+ * Request payload for creating a new role
+ */
+export interface CreateRoleRequest {
+  name: string;
+  description: string;
+  permissions: string[];
+}
+
+/**
+ * Request payload for updating an existing role
+ */
+export interface UpdateRoleRequest {
+  name?: string;
+  description?: string;
+  permissions?: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class RoleService {
-  private roles: Role[] = [];
+  private baseUrl = `${environment.apiUrl}/api/v1`;
   private rolesSubject = new BehaviorSubject<Role[]>([]);
   public roles$ = this.rolesSubject.asObservable();
 
-  private mockDelay = 300; // Simulate API call delay in ms
-
-  constructor() {
-    this.loadRoles();
+  constructor(private http: HttpClient) {
+    // Components are responsible for calling getRolesOnce() or refreshRoles() when needed
   }
 
   /**
-   * Get all roles as observable
+   * Get all roles as observable (from cache)
    */
   getRoles(): Observable<Role[]> {
     return this.roles$;
   }
 
   /**
-   * Get all roles (one-time fetch)
+   * Get all roles from backend (one-time fetch)
    */
   getRolesOnce(): Observable<Role[]> {
-    return of(this.roles).pipe(delay(this.mockDelay));
+    return this.http.get<ApiResponse<Role[]>>(`${this.baseUrl}/roles`).pipe(
+      map(response => this.mapRolesFromApi(response.data)),
+      tap(roles => this.rolesSubject.next(roles)),
+      catchError(error => {
+        console.error('Error fetching roles:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
-   * Get role by ID
+   * Refresh roles from server and update cache
+   */
+  refreshRoles(): void {
+    this.getRolesOnce().subscribe();
+  }
+
+  /**
+   * Get role by ID from backend
    */
   getRoleById(id: number): Observable<Role | null> {
-    return of(this.roles.find(role => role.id === id) || null).pipe(
-      delay(this.mockDelay)
-    );
-  }
-
-  /**
-   * Create a new role (mock API call)
-   */
-  createRole(roleData: Omit<Role, 'id' | 'createdAt' | 'updatedAt'>): Observable<RoleResponse> {
-    return of(null).pipe(
-      delay(this.mockDelay),
-      map(() => {
-        const newRole: Role = {
-          ...roleData,
-          id: this.generateId(),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        this.roles.push(newRole);
-        this.saveRoles();
-        return {
-          success: true,
-          data: newRole,
-          message: `Role '${newRole.name}' created successfully`
-        };
-      })
-    );
-  }
-
-  /**
-   * Update an existing role (mock API call)
-   */
-  updateRole(id: number, updates: Partial<Omit<Role, 'id' | 'createdAt'>>): Observable<RoleResponse> {
-    return of(null).pipe(
-      delay(this.mockDelay),
-      map(() => {
-        const index = this.roles.findIndex(role => role.id === id);
-        if (index !== -1) {
-          this.roles[index] = {
-            ...this.roles[index],
-            ...updates,
-            updatedAt: new Date()
-          };
-          this.saveRoles();
-          return {
-            success: true,
-            data: this.roles[index],
-            message: `Role '${this.roles[index].name}' updated successfully`
-          };
+    return this.http.get<ApiResponse<Role>>(`${this.baseUrl}/roles/${id}`).pipe(
+      map(response => this.mapRoleFromApi(response.data)),
+      catchError(error => {
+        console.error(`Error fetching role ${id}:`, error);
+        if (error.status === 404) {
+          return [null];
         }
-        return {
-          success: false,
-          message: `Role with ID ${id} not found`
-        };
+        return throwError(() => error);
       })
     );
   }
 
   /**
-   * Delete a role (mock API call)
+   * Create a new role via backend API
+   */
+  createRole(roleData: CreateRoleRequest): Observable<RoleResponse> {
+    return this.http.post<ApiResponse<Role>>(`${this.baseUrl}/roles`, roleData).pipe(
+      map(response => ({
+        success: response.status === 'success',
+        data: this.mapRoleFromApi(response.data),
+        message: response.message
+      })),
+      tap(response => {
+        if (response.success) {
+          this.refreshRoles();
+        }
+      }),
+      catchError(error => {
+        console.error('Error creating role:', error);
+        return [{
+          success: false,
+          message: error.error?.message || 'Failed to create role'
+        }];
+      })
+    );
+  }
+
+  /**
+   * Update an existing role via backend API (PATCH)
+   */
+  updateRole(id: number, updates: UpdateRoleRequest): Observable<RoleResponse> {
+    return this.http.patch<ApiResponse<Role>>(`${this.baseUrl}/roles/${id}`, updates).pipe(
+      map(response => ({
+        success: response.status === 'success',
+        data: this.mapRoleFromApi(response.data),
+        message: response.message
+      })),
+      tap(response => {
+        if (response.success) {
+          this.refreshRoles();
+        }
+      }),
+      catchError(error => {
+        console.error(`Error updating role ${id}:`, error);
+        return [{
+          success: false,
+          message: error.error?.message || 'Failed to update role'
+        }];
+      })
+    );
+  }
+
+  /**
+   * Delete a role via backend API
    */
   deleteRole(id: number): Observable<RoleResponse> {
-    return of(null).pipe(
-      delay(this.mockDelay),
-      map(() => {
-        const index = this.roles.findIndex(role => role.id === id);
-        if (index !== -1) {
-          const deletedRole = this.roles.splice(index, 1)[0];
-          this.saveRoles();
-          return {
-            success: true,
-            message: `Role '${deletedRole.name}' deleted successfully`
-          };
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/roles/${id}`).pipe(
+      map(response => ({
+        success: response.status === 'success',
+        message: response.message
+      })),
+      tap(response => {
+        if (response.success) {
+          this.refreshRoles();
         }
-        return {
+      }),
+      catchError(error => {
+        console.error(`Error deleting role ${id}:`, error);
+        return [{
           success: false,
-          message: `Role with ID ${id} not found`
-        };
+          message: error.error?.message || 'Failed to delete role'
+        }];
       })
     );
   }
 
   /**
-   * Get available permissions (mock data)
+   * Get available permissions from backend
    */
   getAvailablePermissions(): Observable<string[]> {
-    const permissions = [
-      'view_employees',
-      'create_employee',
-      'edit_employee',
-      'delete_employee',
-      'view_roles',
-      'create_role',
-      'edit_role',
-      'delete_role',
-      'view_statistics',
-      'view_check_in_out',
-      'manage_check_in_out',
-      'manage_inventory',
-      'view_notifications',
-      'manage_notifications',
-      'export_data',
-      'import_data',
-      'system_settings',
-      'user_management',
-      'view_stocks',
-      'update_stocks',
-      'delete_stocks'
-    ];
-    return of(permissions).pipe(delay(this.mockDelay));
+    return this.http.get<ApiResponse<string[]>>(`${this.baseUrl}/permissions`).pipe(
+      map(response => response.data),
+      catchError(error => {
+        console.error('Error fetching permissions:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
-   * Private method to load roles from localStorage
+   * Map a single role from API response to Role interface
+   * Converts ISO timestamp strings to Date objects
    */
-  private loadRoles(): void {
-    const stored = localStorage.getItem('roles');
-    if (stored) {
-      this.roles = JSON.parse(stored).map((role: any) => ({
-        ...role,
-        createdAt: new Date(role.createdAt),
-        updatedAt: new Date(role.updatedAt)
-      }));
-    } else {
-      // Initialize with sample data
-      this.roles = [
-        {
-          id: 1,
-          name: 'Admin',
-          description: 'Full system access with all permissions',
-          permissions: [
-            'view_employees',
-            'create_employee',
-            'edit_employee',
-            'delete_employee',
-            'view_roles',
-            'create_role',
-            'edit_role',
-            'delete_role',
-            'view_statistics',
-            'view_check_in_out',
-            'manage_check_in_out',
-            'manage_inventory',
-            'view_notifications',
-            'manage_notifications',
-            'export_data',
-            'import_data',
-            'system_settings',
-            'user_management'
-          ],
-          createdAt: new Date('2026-01-01'),
-          updatedAt: new Date('2026-01-01')
-        },
-        {
-          id: 2,
-          name: 'Manager',
-          description: 'Can manage employees and view statistics',
-          permissions: [
-            'view_employees',
-            'create_employee',
-            'edit_employee',
-            'view_statistics',
-            'view_check_in_out',
-            'manage_check_in_out',
-            'view_notifications'
-          ],
-          createdAt: new Date('2026-01-01'),
-          updatedAt: new Date('2026-01-01')
-        },
-        {
-          id: 3,
-          name: 'Employee',
-          description: 'Basic user with limited access',
-          permissions: [
-            'view_check_in_out',
-            'manage_check_in_out',
-            'view_notifications'
-          ],
-          createdAt: new Date('2026-01-01'),
-          updatedAt: new Date('2026-01-01')
-        }
-      ];
-      this.saveRoles();
-    }
-    this.rolesSubject.next([...this.roles]);
+  private mapRoleFromApi(role: any): Role {
+    return {
+      ...role,
+      createdAt: new Date(role.createdAt),
+      updatedAt: new Date(role.updatedAt)
+    };
   }
 
   /**
-   * Private method to save roles to localStorage
+   * Map array of roles from API response to Role[] interface
    */
-  private saveRoles(): void {
-    localStorage.setItem('roles', JSON.stringify(this.roles));
-    this.rolesSubject.next([...this.roles]);
-  }
-
-  /**
-   * Private method to generate unique role IDs
-   */
-  private generateId(): number {
-    return this.roles.length > 0
-      ? Math.max(...this.roles.map(role => role.id)) + 1
-      : 1;
+  private mapRolesFromApi(roles: any[]): Role[] {
+    return roles.map(role => this.mapRoleFromApi(role));
   }
 }
 
