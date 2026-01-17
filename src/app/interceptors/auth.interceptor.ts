@@ -20,7 +20,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const accessToken = authService.getAccessToken();
   let authReq = req;
 
-  if (accessToken) {
+  if (accessToken && !isRefreshing) {
     authReq = addTokenToRequest(req, accessToken);
   }
 
