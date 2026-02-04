@@ -14,7 +14,7 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
 import {Employee, EmployeeService} from '../employee.service';
 import {Role, RoleService} from '../role.service';
 import {CredentialValidatorService} from '../shared/services/credential-validator.service';
-import {generateTemporaryPassword, hashPassword} from '../shared/utils/password-hasher.util';
+import {generateTemporaryPassword} from '../shared/utils/password-hasher.util';
 
 @Component({
   selector: 'app-employee-management',
@@ -86,7 +86,10 @@ export class EmployeeManagementComponent implements OnInit {
 
   loadEmployees(): void {
     this.employeeService.getEmployees().subscribe(employees => {
-      this.employees = employees;
+      this.employees = employees.filter(emp => {
+        const roleName = this.getRoleName(emp.roleId).toLowerCase();
+        return roleName !== 'admin' && emp.username?.toLowerCase() !== 'admin';
+      });
     });
   }
 
@@ -100,7 +103,7 @@ export class EmployeeManagementComponent implements OnInit {
   validateUsername(): void {
     const username = this.employeeForm.get('username')?.value;
     const excludeId = this.isEditMode ? this.currentEmployeeId : undefined;
-    const result = this.credentialValidator.validateUsername(username, excludeId);
+    const result = this.credentialValidator.validateUsername(username, this.employees, excludeId);
 
     this.usernameValidationError = result.errors.length > 0 ? result.errors[0] : '';
     if (!result.isAvailable) {
@@ -145,6 +148,8 @@ export class EmployeeManagementComponent implements OnInit {
     this.generatedPassword = null;
     this.usernameValidationError = '';
     this.passwordValidationErrors = [];
+    this.employeeForm.get('password')?.setValidators([Validators.required]);
+    this.employeeForm.get('password')?.updateValueAndValidity();
     this.showDialog = true;
   }
 
@@ -175,8 +180,8 @@ export class EmployeeManagementComponent implements OnInit {
     });
 
     // Make password optional for edit mode (can update without changing password)
-    this.employeeForm.get('password')?.setValidators([Validators.required]);
-    this.employeeForm.get('password')?.updateValueAndValidity();
+    this.employeeForm.get('password')?.clearValidators();
+    // this.employeeForm.get('password')?.updateValueAndValidity();
 
     this.showDialog = true;
   }
@@ -197,30 +202,68 @@ export class EmployeeManagementComponent implements OnInit {
     }
 
     const formValue = this.employeeForm.value;
+
+    // Split Full Name into First and Last Name
+    const nameParts = formValue.fullName.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'User';
+
+    // Calculate Date of Birth from Age
+    const today = new Date();
+    const birthYear = today.getFullYear() - formValue.age;
+    const dateOfBirth = new Date(birthYear, 0, 1).toISOString().split('T')[0]; // Jan 1st of birth year
+
+    // Generate Email
+    const email = `${formValue.username}@grace.local`;
+
     const employeeData = {
-      fullName: formValue.fullName,
+      firstName: firstName,
+      lastName: lastName,
+      fullName: formValue.fullName, // Keep for frontend if needed, but backend uses first/last
+      email: email,
       age: formValue.age,
+      dateOfBirth: dateOfBirth,
       roleId: parseInt(formValue.roleId, 10),
       username: formValue.username,
-      password: hashPassword(formValue.password),
+      password: this.isEditMode && !formValue.password ? undefined : formValue.password,
       lastCheckInTime: formValue.lastCheckInTime ? new Date(formValue.lastCheckInTime) : null,
       lastCheckOutTime: formValue.lastCheckOutTime ? new Date(formValue.lastCheckOutTime) : null
     };
 
     if (this.isEditMode && this.currentEmployeeId !== null) {
       // Update existing employee
-      this.employeeService.updateEmployee(this.currentEmployeeId, employeeData);
+      const updateData = {...employeeData};
+      if (!formValue.password) {
+        delete updateData.password;
+      }
+
+      this.employeeService.updateEmployee(this.currentEmployeeId, updateData).subscribe({
+        next: () => {
+          this.loadEmployees();
+          this.closeDialog();
+        },
+        error: (err) => console.error('Error updating employee:', err)
+      });
     } else {
       // Add new employee
-      this.employeeService.addEmployee(employeeData);
+      this.employeeService.addEmployee(employeeData as any).subscribe({
+        next: () => {
+          this.loadEmployees();
+          this.closeDialog();
+        },
+        error: (err) => console.error('Error adding employee:', err)
+      });
     }
-
-    this.closeDialog();
   }
 
   deleteEmployee(employee: Employee): void {
     if (confirm(`Are you sure you want to delete ${employee.fullName}?`)) {
-      this.employeeService.deleteEmployee(employee.id);
+      this.employeeService.deleteEmployee(employee.id).subscribe({
+        next: () => {
+          this.loadEmployees();
+        },
+        error: (err) => console.error('Error deleting employee:', err)
+      });
     }
   }
 

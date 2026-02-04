@@ -5,11 +5,11 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatButtonModule} from '@angular/material/button';
-import {MatDialogModule, MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule, provideNativeDateAdapter} from '@angular/material/core';
 import {Equipment, EquipmentStatus} from '../../models/storage.models';
-import {EmployeeService, Employee} from '../../../employee.service';
+import {Employee, EmployeeService} from '../../../employee.service';
 
 interface DialogData {
   mode: 'create' | 'edit';
@@ -175,12 +175,15 @@ export class EquipmentFormDialogComponent implements OnInit {
   }
 
   private loadEmployees(): void {
-    try {
-      this.employees = this.employeeService.getAllEmployees();
-    } catch (error) {
-      console.error('Error loading employees:', error);
-      this.employees = [];
-    }
+    this.employeeService.getEmployees().subscribe({
+      next: (data) => {
+        this.employees = data;
+      },
+      error: (error) => {
+        console.error('Error loading employees:', error);
+        this.employees = [];
+      }
+    });
   }
 }
 

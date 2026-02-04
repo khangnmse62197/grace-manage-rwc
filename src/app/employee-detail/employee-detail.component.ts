@@ -44,11 +44,14 @@ export class EmployeeDetailComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.loadRoles();
     if (id) {
-      this.employee = this.employeeService.getEmployeeById(id) || null;
-      if (this.employee) {
-        this.history = this.employeeService.getEmployeeHistory(id);
-        this.groupedHistory = this.groupHistoryByDay(this.history);
-      }
+      this.employeeService.getEmployeeById(id).subscribe(employee => {
+        this.employee = employee;
+        if (this.employee) {
+          // History is not yet supported by backend
+          this.history = [];
+          this.groupedHistory = [];
+        }
+      });
     }
   }
 

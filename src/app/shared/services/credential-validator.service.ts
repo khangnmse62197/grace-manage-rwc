@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {EmployeeService} from '../../employee.service';
+import {Employee} from '../../employee.service';
 
 export interface PasswordStrengthResult {
   isValid: boolean;
@@ -19,7 +19,7 @@ export class CredentialValidatorService {
   private readonly MIN_USERNAME_LENGTH = 3;
   private readonly MAX_USERNAME_LENGTH = 30;
 
-  constructor(private employeeService: EmployeeService) {
+  constructor() {
   }
 
   /**
@@ -67,10 +67,11 @@ export class CredentialValidatorService {
   /**
    * Validate username format and availability
    * @param username The username to validate
+   * @param employees List of existing employees to check against
    * @param excludeEmployeeId Optional: employee ID to exclude from uniqueness check (for updates)
    * @returns UsernameValidationResult with validation details
    */
-  validateUsername(username: string, excludeEmployeeId?: number | null): UsernameValidationResult {
+  validateUsername(username: string, employees: Employee[], excludeEmployeeId?: number | null): UsernameValidationResult {
     const errors: string[] = [];
 
     if (!username) {
@@ -90,7 +91,7 @@ export class CredentialValidatorService {
       }
 
       // Check uniqueness
-      if (!this.isUsernameUnique(username, excludeEmployeeId)) {
+      if (!this.isUsernameUnique(username, employees, excludeEmployeeId)) {
         errors.push('Username is already taken');
       }
     }
@@ -104,15 +105,14 @@ export class CredentialValidatorService {
   /**
    * Check if a username is unique across all employees
    * @param username The username to check
+   * @param employees List of employees
    * @param excludeEmployeeId Optional: employee ID to exclude from check
    * @returns True if username is unique
    */
-  private isUsernameUnique(username: string, excludeEmployeeId?: number | null): boolean {
-    const allEmployees = this.employeeService.getAllEmployees();
-    return !allEmployees.some(emp =>
+  private isUsernameUnique(username: string, employees: Employee[], excludeEmployeeId?: number | null): boolean {
+    return !employees.some(emp =>
       emp.username?.toLowerCase() === username.toLowerCase() &&
       emp.id !== excludeEmployeeId
     );
   }
 }
-
