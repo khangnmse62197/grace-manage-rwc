@@ -1,5 +1,7 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, Observable, of} from 'rxjs';
+import {catchError, map, tap} from 'rxjs/operators';
+import {AttendanceService, CheckInRecordResponse} from './attendance.service';
 
 export interface LocationData {
   latitude: number;
@@ -27,8 +29,9 @@ export class LocationService {
   public checkInOutLocations$ = this.checkInOutLocationsSubject.asObservable();
 
   private geolocationAvailable = 'geolocation' in navigator;
+  private isLoadingFromServer = false;
 
-  constructor() {
+  constructor(private attendanceService: AttendanceService) {
     this.loadStoredLocations();
     // Request permission and start tracking the current location
     if (this.geolocationAvailable) {
@@ -127,7 +130,7 @@ export class LocationService {
   }
 
   /**
-   * Record check-in/out location
+   * Record check-in/out location (updates local cache)
    */
   recordCheckInOutLocation(type: 'in' | 'out', location: LocationData): void {
     const userId = this.getCurrentUserId();
@@ -142,7 +145,7 @@ export class LocationService {
     locations.push(record);
     this.checkInOutLocationsSubject.next(locations);
 
-    // Persist to localStorage
+    // Persist to localStorage as cache
     localStorage.setItem(
       `checkInOutLocations_${userId}`,
       JSON.stringify(locations)
@@ -177,6 +180,85 @@ export class LocationService {
       const recordDate = new Date(record.timestamp);
       return recordDate >= startDate && recordDate <= endDate;
     });
+  }
+
+  /**
+   * Fetch location history from server
+   */
+  fetchHistoryFromServer(userId: number, startDate?: Date, endDate?: Date): Observable<CheckInOutLocation[]> {
+    this.isLoadingFromServer = true;
+
+    return this.attendanceService.getHistory(userId, startDate, endDate).pipe(
+      map(records => this.mapApiResponseToLocations(records)),
+      tap(locations => {
+        this.isLoadingFromServer = false;
+        // Update local cache
+        const existingLocations = this.checkInOutLocationsSubject.value;
+        const merged = this.mergeLocations(existingLocations, locations);
+        this.checkInOutLocationsSubject.next(merged);
+        // Update localStorage cache
+        localStorage.setItem(
+          `checkInOutLocations_${userId}`,
+          JSON.stringify(merged)
+        );
+      }),
+      catchError(error => {
+        this.isLoadingFromServer = false;
+        console.error('Failed to fetch history from server:', error);
+        // Return cached data on error
+        return of(this.checkInOutLocationsSubject.value);
+      })
+    );
+  }
+
+  /**
+   * Fetch today's locations from server
+   */
+  fetchTodayFromServer(userId: number): Observable<CheckInOutLocation[]> {
+    return this.attendanceService.getTodayRecords(userId).pipe(
+      map(records => this.mapApiResponseToLocations(records)),
+      tap(locations => {
+        // Update today's records in cache
+        const today = new Date();
+        const existingNonToday = this.checkInOutLocationsSubject.value.filter(loc => {
+          const locDate = new Date(loc.timestamp);
+          return locDate.toDateString() !== today.toDateString();
+        });
+        const merged = [...existingNonToday, ...locations];
+        this.checkInOutLocationsSubject.next(merged);
+      }),
+      catchError(error => {
+        console.error('Failed to fetch today records from server:', error);
+        return of(this.getTodayLocations());
+      })
+    );
+  }
+
+  /**
+   * Check if currently loading from server
+   */
+  isLoading(): boolean {
+    return this.isLoadingFromServer;
+  }
+
+  /**
+   * Map API response to CheckInOutLocation format
+   */
+  private mapApiResponseToLocations(records: CheckInRecordResponse[]): CheckInOutLocation[] {
+    return records
+      .filter(r => r.latitude != null && r.longitude != null)
+      .map(r => ({
+        id: r.id,
+        type: r.type === 'IN' ? 'in' as const : 'out' as const,
+        location: {
+          latitude: r.latitude!,
+          longitude: r.longitude!,
+          accuracy: r.accuracy || 0,
+          timestamp: new Date(r.timestamp),
+          address: r.address
+        },
+        timestamp: new Date(r.timestamp)
+      }));
   }
 
   /**
@@ -279,26 +361,14 @@ export class LocationService {
   }
 
   /**
-   * Load stored locations from localStorage
+   * Merge locations avoiding duplicates
    */
-  private loadStoredLocations(): void {
-    const userId = this.getCurrentUserId();
-    const stored = localStorage.getItem(`checkInOutLocations_${userId}`);
-    if (stored) {
-      try {
-        const locations = JSON.parse(stored).map((record: any) => ({
-          ...record,
-          timestamp: new Date(record.timestamp),
-          location: {
-            ...record.location,
-            timestamp: new Date(record.location.timestamp)
-          }
-        }));
-        this.checkInOutLocationsSubject.next(locations);
-      } catch (error) {
-        console.error('Error loading stored locations:', error);
-      }
-    }
+  private mergeLocations(existing: CheckInOutLocation[], incoming: CheckInOutLocation[]): CheckInOutLocation[] {
+    const existingIds = new Set(existing.map(l => l.id));
+    const newLocations = incoming.filter(l => !existingIds.has(l.id));
+    return [...existing, ...newLocations].sort((a, b) =>
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
   }
 
   /**
@@ -318,5 +388,40 @@ export class LocationService {
     }
     return 'unknown-user';
   }
-}
 
+  /**
+   * Load stored locations - first from localStorage, then sync from server
+   */
+  private loadStoredLocations(): void {
+    const userId = this.getCurrentUserId();
+
+    // First, load from localStorage for immediate display
+    const stored = localStorage.getItem(`checkInOutLocations_${userId}`);
+    if (stored) {
+      try {
+        const locations = JSON.parse(stored).map((record: any) => ({
+          ...record,
+          timestamp: new Date(record.timestamp),
+          location: {
+            ...record.location,
+            timestamp: new Date(record.location.timestamp)
+          }
+        }));
+        this.checkInOutLocationsSubject.next(locations);
+      } catch (error) {
+        console.error('Error loading stored locations:', error);
+      }
+    }
+
+    // Then, fetch from server to get latest data
+    const userIdNum = parseInt(userId, 10);
+    if (!isNaN(userIdNum)) {
+      // Fetch last 30 days of history
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+
+      this.fetchHistoryFromServer(userIdNum, startDate, endDate).subscribe();
+    }
+  }
+}

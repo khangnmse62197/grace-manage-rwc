@@ -8,6 +8,9 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatDialogRef} from '@angular/material/dialog';
 import {CheckInOutLocation, LocationService} from '../location.service';
+import {AttendanceService} from '../attendance.service';
+import {AuthService} from '../auth.service';
+import {Subscription} from 'rxjs';
 import L from 'leaflet';
 
 // Fix for Leaflet default markers
@@ -42,18 +45,45 @@ export class LocationMapComponent implements OnInit, OnDestroy, OnChanges, After
   selectedLocation: CheckInOutLocation | null = null;
   isLoading = false;
   private viewInitialized = false;
+  private subscriptions: Subscription[] = [];
 
-  constructor(private locationService: LocationService, public dialogRef: MatDialogRef<LocationMapComponent>) {
+  constructor(
+    private locationService: LocationService,
+    private attendanceService: AttendanceService,
+    private authService: AuthService,
+    public dialogRef: MatDialogRef<LocationMapComponent>
+  ) {
   }
 
   ngOnInit(): void {
-    // Don't initialize map here, wait for view to be ready
+    // Fetch location history from server when component opens
+    this.loadHistoryFromServer();
+
+    // Subscribe to location updates from LocationService
+    const locSub = this.locationService.checkInOutLocations$.subscribe(locations => {
+      if (locations.length > 0 && !this.isLoading) {
+        this.locations = locations;
+        if (this.viewInitialized && this.map) {
+          this.refreshMap();
+        }
+      }
+    });
+    this.subscriptions.push(locSub);
   }
 
   ngAfterViewInit(): void {
     this.viewInitialized = true;
-    this.initializeMap();
-    this.addMarkersToMap();
+    if (!this.isLoading) {
+      this.initializeMap();
+      this.addMarkersToMap();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.map.remove();
+    }
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -73,10 +103,19 @@ export class LocationMapComponent implements OnInit, OnDestroy, OnChanges, After
     }
   }
 
-  ngOnDestroy(): void {
+  /**
+   * Refresh map with current data
+   */
+  refreshMap(): void {
     if (this.map) {
       this.map.remove();
+      this.map = null;
     }
+    this.markers = [];
+    setTimeout(() => {
+      this.initializeMap();
+      this.addMarkersToMap();
+    }, 100);
   }
 
   /**
@@ -130,16 +169,58 @@ export class LocationMapComponent implements OnInit, OnDestroy, OnChanges, After
   }
 
   /**
-   * Refresh map with current data
+   * Reload data from server
    */
-  refreshMap(): void {
-    this.ngOnDestroy();
-    this.map = null;
-    this.markers = [];
-    setTimeout(() => {
-      this.initializeMap();
-      this.addMarkersToMap();
-    }, 100);
+  reloadFromServer(): void {
+    this.loadHistoryFromServer();
+  }
+
+  /**
+   * Fetch location history from server
+   */
+  private loadHistoryFromServer(): void {
+    const userId = this.authService.getCurrentUser()?.id;
+    if (!userId) return;
+
+    this.isLoading = true;
+
+    // Fetch last 30 days of history
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    this.attendanceService.getHistory(userId, startDate, endDate).subscribe({
+      next: (records) => {
+        // Map API response to CheckInOutLocation format
+        const serverLocations: CheckInOutLocation[] = records
+          .filter(r => r.latitude != null && r.longitude != null)
+          .map(r => ({
+            id: r.id,
+            type: r.type === 'IN' ? 'in' as const : 'out' as const,
+            location: {
+              latitude: r.latitude!,
+              longitude: r.longitude!,
+              accuracy: r.accuracy || 0,
+              timestamp: new Date(r.timestamp),
+              address: r.address
+            },
+            timestamp: new Date(r.timestamp)
+          }));
+
+        this.locations = serverLocations;
+        this.isLoading = false;
+
+        // Refresh map with server data
+        if (this.viewInitialized) {
+          this.refreshMap();
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load history from server:', error);
+        this.isLoading = false;
+        // Keep using local data as fallback
+      }
+    });
   }
 
   /**
@@ -361,4 +442,3 @@ export class LocationMapComponent implements OnInit, OnDestroy, OnChanges, After
     this.dialogRef.close();
   }
 }
-
