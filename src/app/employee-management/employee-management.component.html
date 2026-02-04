@@ -130,12 +130,8 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Username</mat-label>
-            <input
-              (blur)="validateUsername()"
-              formControlName="username"
-              matInput
-              placeholder="Enter username (alphanumeric and underscore)"
-              required>
+            <input (blur)="validateUsername()" formControlName="username" matInput
+                   placeholder="Enter username (alphanumeric and underscore)" required>
             @if (employeeForm.get('username')?.invalid && employeeForm.get('username')?.touched) {
               <mat-error *ngIf="usernameValidationError">{{ usernameValidationError }}</mat-error>
               <mat-error *ngIf="!usernameValidationError">Username is required</mat-error>
@@ -144,13 +140,8 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Password</mat-label>
-            <input
-              (blur)="validatePassword()"
-              [type]="showPassword ? 'text' : 'password'"
-              formControlName="password"
-              matInput
-              placeholder="Enter a strong password"
-              required>
+            <input (blur)="validatePassword()" [required]="!isEditMode" [type]="showPassword ? 'text' : 'password'"
+                   formControlName="password" matInput placeholder="Enter a strong password">
             <button (click)="togglePasswordVisibility()" mat-icon-button matSuffix type="button">
               <mat-icon>{{ showPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
             </button>
@@ -178,7 +169,8 @@
 
       <div class="dialog-actions">
         <button (click)="closeDialog()" mat-button>Cancel</button>
-        <button (click)="saveEmployee()" [disabled]="employeeForm.invalid" color="primary" mat-raised-button>
+        <button (click)="saveEmployee()" [disabled]="employeeForm.invalid || (isEditMode && !hasChanges())"
+                color="primary" mat-raised-button>
           {{ isEditMode ? 'Update' : 'Add' }}
         </button>
       </div>

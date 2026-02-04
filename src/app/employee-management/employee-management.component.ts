@@ -49,6 +49,7 @@ export class EmployeeManagementComponent implements OnInit {
   generatedPassword: string | null = null;
   usernameValidationError: string = '';
   passwordValidationErrors: string[] = [];
+  private initialFormValues: any = {};
 
   constructor(
     private employeeService: EmployeeService,
@@ -86,10 +87,7 @@ export class EmployeeManagementComponent implements OnInit {
 
   loadEmployees(): void {
     this.employeeService.getEmployees().subscribe(employees => {
-      this.employees = employees.filter(emp => {
-        const roleName = this.getRoleName(emp.roleId).toLowerCase();
-        return roleName !== 'admin' && emp.username?.toLowerCase() !== 'admin';
-      });
+      this.employees = employees;
     });
   }
 
@@ -116,6 +114,14 @@ export class EmployeeManagementComponent implements OnInit {
    */
   validatePassword(): void {
     const password = this.employeeForm.get('password')?.value;
+
+    // In edit mode, empty password is valid (means no change)
+    if (this.isEditMode && !password) {
+      this.passwordValidationErrors = [];
+      this.employeeForm.get('password')?.setErrors(null);
+      return;
+    }
+
     const result = this.credentialValidator.validatePasswordStrength(password);
 
     this.passwordValidationErrors = result.errors;
@@ -174,16 +180,52 @@ export class EmployeeManagementComponent implements OnInit {
       age: employee.age,
       roleId: employee.roleId,
       username: employee.username || '',
-      password: employee.password || '',
+      password: '', // Clear password field for edit
       lastCheckInTime: formatDateTimeLocal(employee.lastCheckInTime),
       lastCheckOutTime: formatDateTimeLocal(employee.lastCheckOutTime)
     });
 
+    // Capture initial values for dirty check
+    this.initialFormValues = this.employeeForm.getRawValue();
+
     // Make password optional for edit mode (can update without changing password)
     this.employeeForm.get('password')?.clearValidators();
-    // this.employeeForm.get('password')?.updateValueAndValidity();
+    this.employeeForm.get('password')?.updateValueAndValidity();
+
+    // Explicitly clear errors to be sure
+    this.employeeForm.get('password')?.setErrors(null);
 
     this.showDialog = true;
+  }
+
+  findInvalidControls() {
+    const invalid = [];
+    const controls = this.employeeForm.controls;
+    for (const name in controls) {
+      if (controls[name].invalid) {
+        invalid.push(name);
+      }
+    }
+    return invalid;
+  }
+
+  hasChanges(): boolean {
+    const currentValues = this.employeeForm.getRawValue();
+    const initial = this.initialFormValues;
+
+    // Check specific fields
+    if (currentValues.fullName !== initial.fullName) return true;
+    if (currentValues.age !== initial.age) return true;
+    if (currentValues.roleId !== initial.roleId) return true;
+    if (currentValues.username !== initial.username) return true;
+    if (currentValues.lastCheckInTime !== initial.lastCheckInTime) return true;
+    if (currentValues.lastCheckOutTime !== initial.lastCheckOutTime) return true;
+
+    // Password check: if it has value (and we are in edit mode), it means it changed
+    // In add mode, everything is a change effectively, but this method is mostly for edit
+    if (this.isEditMode && currentValues.password) return true;
+
+    return false;
   }
 
   closeDialog(): void {
